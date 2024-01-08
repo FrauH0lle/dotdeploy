@@ -20,7 +20,7 @@ depends=(
    backup/snapper
 )
 
-packages=( dotfiles-modules/host-yamato )
+packages=( dotdeploy/host-yamato )
 
 module_configure() {
    # Enable fstrim

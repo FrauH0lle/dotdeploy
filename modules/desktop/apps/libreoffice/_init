@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-packages=( dotfiles-modules/desktop-apps-libreoffice )
+packages=( dotdeploy/desktop-apps-libreoffice )

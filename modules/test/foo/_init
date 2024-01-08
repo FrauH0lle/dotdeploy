@@ -51,7 +51,7 @@ post_module_configure() {
 #     sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/bash.use /etc/portage/package.use/bash
 
 #     # Install packages
-#     sudo emerge --verbose dotfiles-modules/shell-bash || exit 1
+#     sudo emerge --verbose dotdeploy/shell-bash || exit 1
 # }
 
 # link() {

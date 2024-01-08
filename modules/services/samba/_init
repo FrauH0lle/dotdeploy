@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-packages=( dotfiles-modules/services-samba )
+packages=( dotdeploy/services-samba )
 
 module_configure() {
     # Activate sysusers

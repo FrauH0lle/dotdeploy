@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-packages=( dotfiles-modules/base )
+packages=( dotdeploy/base )
 
 module_configure() {
     # Start cronie

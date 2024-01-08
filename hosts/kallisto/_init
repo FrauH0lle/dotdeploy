@@ -20,7 +20,7 @@ depends=(
    backup/snapper
 )
 
-packages=( dotfiles-modules/host-kallisto )
+packages=( dotdeploy/host-kallisto )
 
 module_configure() {
    # Enable fstrim

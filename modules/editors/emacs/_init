@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-packages=( dotfiles-modules/editors-emacs )
+packages=( dotdeploy/editors-emacs )
 
 module_configure() {
     # Clone .emacs.d config

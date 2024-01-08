@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-packages=( dotfiles-modules/desktop-fonts )
+packages=( dotdeploy/desktop-fonts )
 
 module_configure() {
     # Symlinks

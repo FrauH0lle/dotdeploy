@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-packages=( dotfiles-modules/dev-containers )
+packages=( dotdeploy/dev-containers )
 
 module_configure() {
     # Set subuid and subgid

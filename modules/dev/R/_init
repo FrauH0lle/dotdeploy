@@ -2,4 +2,4 @@
 
 depends=( dev/containers )
 
-packages=( dotfiles-modules/dev-R )
+packages=( dotdeploy/dev-R )
