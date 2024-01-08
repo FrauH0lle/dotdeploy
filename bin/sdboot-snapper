@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Make sure we are root
+if [[ $EUID -ne 0 ]]; then
+   echo "Must be run as root, aborting."
+   exit 1
+fi
+
+# Make sure snapper is installed
+if [[ ! -x "$(command -v snapper)" ]]; then
+    echo "snapper not installed, aborting."
+    exit 1
+fi
+
+# Cleanup old auto-generated entries
+# This means: anything in the form of "*_gentoo_single|pre|post_*"
+find /boot/loader/entries -maxdepth 1 -type f \
+    -regextype posix-egrep -regex ".*gentoo_(single|pre|post)_.*" \
+    -print -delete
+
+# Delete previous writable snapshots
+btrfs subvolume delete /.rwsnapshots/*
+
+input_file="$(mktemp)"
+
+snapper --machine-readable csv -c root list --columns number,type,date > "$input_file"
+
+# Redirection overwrite not allowed
+set -o noclobber
+
+while IFS="," read -r number type date
+do
+  # Get time, numer and type
+  SNAP_ID="$number"
+  SNAP_TIME="$date"
+  SNAP_TIME="$(echo $SNAP_TIME | sed -e 's/:/-/g' -e 's/ /_/g')"
+  SNAP_TYPE="$type"
+
+  # Make rw snapshot
+  btrfs subvolume snapshot "/.snapshots/$SNAP_ID/snapshot" "/.rwsnapshots/$SNAP_ID"
+
+  # Copy the dist kernel conf and tweak the `subvol` option
+  sed --expression="
+    /^title */ s#\$# $SNAP_ID $SNAP_TIME $SNAP_TYPE#
+    /^options *.*subvol=/ s#subvol=/@root#subvol=/@rwsnapshots/${SNAP_ID}#
+    "   /boot/loader/entries/gentoo-dist.conf \
+      >   /boot/loader/entries/"$SNAP_ID"_gentoo_"$SNAP_TYPE"_"$SNAP_TIME".conf
+done <  <(tail -n +3 "$input_file")

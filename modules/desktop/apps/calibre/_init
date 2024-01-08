@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/desktop-apps-calibre )
+

@@ -1,0 +1,65 @@
+# -*- mode: sh; -*-
+
+# Anything in this file can be overwritten by the upcoming zsh config files. Be
+# aware!
+#
+# Zsh startup, Solus specific:
+
+# /usr/share/defaults/etc/zsh/zshenv
+# Used for setting environment variables for all users; it should not contain
+# commands that produce output or assume the shell is attached to a TTY. When
+# this file exists it will always be read, this cannot be overridden.
+
+# $ZDOTDIR/.zshenv
+# Used for setting user's environment variables; it should not contain commands
+# that produce output or assume the shell is attached to a TTY. When this file
+# exists it will always be read.
+
+# /usr/share/defaults/etc/zsh/zprofile
+# Used for executing commands at start for all users, will be read when starting
+# as a login shell. By default it contains a line which sources /etc/profile.
+
+# /etc/profile
+# This file should be sourced by all POSIX sh-compatible shells upon login: it
+# sets up $PATH and other environment variables and application-specific
+# (/etc/profile.d/*.sh) settings upon login.
+
+# $ZDOTDIR/.zprofile
+# Used for executing user's commands at start, will be read when starting as a
+# login shell. Typically used to autostart graphical sessions and to set
+# session-wide environment variables.
+
+# /usr/share/defaults/etc/zsh/zshrc
+# Used for setting interactive shell configuration and executing commands for
+# all users, will be read when starting as an interactive shell.
+
+# $ZDOTDIR/.zshrc
+# Used for setting user's interactive shell configuration and executing
+# commands, will be read when starting as an interactive shell.
+
+# /usr/share/defaults/etc/zsh/zlogin
+# Used for executing commands for all users at ending of initial progress, will
+# be read when starting as a login shell.
+
+# $ZDOTDIR/.zlogin
+# Used for executing user's commands at ending of initial progress, will be read
+# when starting as a login shell. Typically used to autostart command line
+# utilities. Should not be used to autostart graphical sessions, as at this
+# point the session might contain configuration meant only for an interactive
+# shell.
+
+# $ZDOTDIR/.zlogout
+# Used for executing commands when a login shell exits.
+
+# /usr/share/defaults/etc/zsh/zlogout
+# Used for executing commands for all users when a login shell exits.
+
+# Environment
+[[ -f $HOME/.commonrc ]] && source "$HOME/.commonrc"
+[[ -f $HOME/.env.sh ]] && source "$HOME/.env.sh"
+
+# Setup $ZDOTDIR
+export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+
+# Envvars
+export EDITOR=nano

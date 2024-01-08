@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+# Make sure we are root
+if [[ $EUID -ne 0 ]]; then
+   echo "Must be run as root, aborting."
+   exit 1
+fi
+
+# Find all loader config files
+readarray -d '' conf_files < <(find /boot/loader/entries -type f -name "*.conf" -print0)
+for conf_file in "${conf_files[@]}"; do
+    echo "--- Current file: $conf_file ---"
+    echo ""
+    content="$(<$conf_file)"
+
+    # Check if current file is protected. If yes, skip it
+    protection=$(echo "$content" | grep "^#PROTECT")
+    if [ ! -z "$protection" ]; then
+        echo "$conf_file is protected and will not be modified"
+        echo ""
+        continue
+    fi
+
+    # Get currently used version in file
+    cur_ver=$(echo "$content" | grep -o "/vmlinuz.*" | cut -d'-' -f 2)
+    cur_arch=$(echo "$content" | grep -o "/vmlinuz.*" | cut -d'-' -f 3-)
+
+    # Pattern we are looking for
+    KERNEL_PATTERN="vmlinuz-[0-9]*-*"
+
+    # Read information from installed kernels
+    arr=()
+    while read -r kernel; do
+        kernelnum=$(echo "${kernel}" | cut -d'-' -f 2)
+        kernelarch=$(echo "${kernel}" | cut -d'-' -f 3-)
+
+        # Store kernel version if arch matches currently processed file
+        if [[ "$kernelarch" == "$cur_arch" ]]; then
+            arr+=($kernelnum)
+        fi
+    done < <(find /boot -maxdepth 2 -type f -name "${KERNEL_PATTERN}" -printf "/%P\n")
+
+    # Sort found kernel versions
+    IFS=$'\n' sorted=($(sort -V -r <<<"${arr[*]}"))
+    unset IFS
+    # Use newest version
+    new_kernel="${sorted[0]}"
+    # Removes the first element
+    unset sorted[0]
+    # Inform about other versions
+    if [ ! ${#sorted[@]} -eq 0 ]; then
+        echo "Other versions for $cur_arch are installed:"
+        for i in "${sorted[@]}"
+        do
+            echo "$i-$cur_arch"
+        done
+        echo ""
+    fi
+
+    # Present changes to user and write to file
+    new=$(sed -e "s/vmlinuz.*/vmlinuz-$new_kernel-$cur_arch/g" -e "s/initramfs.*/initramfs-$new_kernel-$cur_arch.img/g" "$conf_file")
+    diff --color -u <(echo "$content") <(echo "$new")
+    sed -i -e "s/vmlinuz.*/vmlinuz-$new_kernel-$cur_arch/g" -e "s/initramfs.*/initramfs-$new_kernel-$cur_arch.img/g" "$conf_file"
+    echo ""
+done

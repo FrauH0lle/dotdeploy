@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+# Prepare OS for deployment.
+# - Configure local repository
+# - Directories should be created on the go
+
+#  FIXME Move into base module?
+case "$host_os" in
+    gentoo)
+        # Add GURU overlay
+        # Make sure eselect-repository is installed
+        if ! equery l app-eselect/eselect-repository > /dev/null; then
+            dd::log::log-info "Installing app-eselect/eselect-repository"
+            dd::common::elevate_cmd emerge --oneshot --verbose app-eselect/eselect-repository || exit 1
+        fi
+
+        if ! eselect repository list -i | grep "guru" > /dev/null; then
+           dd::log::log-info "Adding GURU overlay"
+           dd::common::elevate_cmd eselect repository enable guru || exit 1
+           dd::common::elevate_cmd emaint sync -r guru || exit 1
+        fi
+
+        # Add local repository
+        if [[ ! -d /etc/portage/repos.conf ]]; then
+            dd::common::elevate_cmd mkdir -p /etc/portage/repos.conf
+        fi
+        if [[ ! -f /etc/portage/repos.conf/localrepo.conf ]]; then
+            dd::common::elevate_cmd ln -sfv "$DOTDEPLOY_ROOT"/packages/gentoo/localrepo.conf /etc/portage/repos.conf/localrepo.conf
+        fi
+        if [[ ! -d /etc/portage/package.accept_keywords ]]; then
+            dd::common::elevate_cmd mkdir -p /etc/portage/package.accept_keywords
+        fi
+        if [[ ! -f /etc/portage/package.accept_keywords/localrepo ]]; then
+            dd::common::elevate_cmd ln -sfv "$DOTDEPLOY_ROOT"/packages/gentoo/localrepo.keywords /etc/portage/package.accept_keywords/localrepo
+        fi
+        if [[ ! -d /etc/portage/package.use ]]; then
+            dd::common::elevate_cmd mkdir -p /etc/portage/package.use
+        fi
+        if [[ ! -d /etc/portage/patches ]]; then
+            dd::common::elevate_cmd mkdir -p /etc/portage/patches
+        fi
+        ;;
+esac

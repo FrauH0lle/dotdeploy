@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+depends=( shell/common )
+
+packages=( dotfiles-modules/shell-zsh )
+
+module_configure() {
+    dd::common::ensure_repo https://github.com/zdharma-continuum/zinit.git ~/.config/zsh/.zinit/bin
+    dd::common::ensure_repo https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
+
+    ln -svf "$HOME"/.zshenv "$XDG_CONFIG_HOME"/zsh/.zshenv
+}

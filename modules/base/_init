@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/base )
+
+module_configure() {
+    # Start cronie
+    sudo systemctl enable cronie.service
+
+    # User groups
+    sudo gpasswd -a "$USER" adm
+    sudo gpasswd -a "$USER" wheel
+    sudo gpasswd -a "$USER" users
+    sudo gpasswd -a "$USER" portage
+    sudo gpasswd -a "$USER" input
+}

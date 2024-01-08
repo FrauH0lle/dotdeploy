@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/desktop-fonts )
+
+module_configure() {
+    # Symlinks
+    sudo ln -sfv /etc/fonts/conf.avail/11-lcdfilter-default.conf /etc/fonts/conf.d
+    sudo ln -sfv /etc/fonts/conf.avail/10-sub-pixel-rgb.conf /etc/fonts/conf.d
+    sudo ln -sfv /etc/fonts/conf.avail/10-hinting-slight.conf /etc/fonts/conf.d
+    # sudo ln -sfv /etc/fonts/conf.avail/30-infinality-aliases.conf /etc/fonts/conf.d
+}

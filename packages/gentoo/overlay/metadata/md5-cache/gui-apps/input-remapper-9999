@@ -1,0 +1,16 @@
+BDEPEND=test? ( x11-libs/gtk+:3 x11-apps/xmodmap x11-libs/gtksourceview:4 python_single_target_python3_10? ( dev-python/pygobject[python_targets_python3_10(-)] dev-python/pydbus[python_targets_python3_10(-)] dev-python/pydantic[python_targets_python3_10(-)] dev-python/python-evdev[python_targets_python3_10(-)] dev-python/setuptools[python_targets_python3_10(-)] ) python_single_target_python3_11? ( dev-python/pygobject[python_targets_python3_11(-)] dev-python/pydbus[python_targets_python3_11(-)] dev-python/pydantic[python_targets_python3_11(-)] dev-python/python-evdev[python_targets_python3_11(-)] dev-python/setuptools[python_targets_python3_11(-)] ) python_single_target_python3_10? ( >=dev-python/pytest-7.3.1[python_targets_python3_10(-)] ) python_single_target_python3_11? ( >=dev-python/pytest-7.3.1[python_targets_python3_11(-)] ) ) python_single_target_python3_10? ( dev-lang/python:3.10 ) python_single_target_python3_11? ( dev-lang/python:3.11 ) python_single_target_python3_10? ( >=dev-python/setuptools-67.8.0-r1[python_targets_python3_10(-)] ) python_single_target_python3_11? ( >=dev-python/setuptools-67.8.0-r1[python_targets_python3_11(-)] ) virtual/pkgconfig >=dev-vcs/git-1.8.2.1[curl]
+DEFINED_PHASES=compile configure install prepare setup test unpack
+DESCRIPTION=A tool to change and program the mapping of your input device buttons
+EAPI=8
+HOMEPAGE=https://github.com/sezanzeb/input-remapper
+INHERIT=distutils-r1 systemd git-r3
+IUSE=test python_single_target_python3_10 python_single_target_python3_11
+KEYWORDS=amd64
+LICENSE=GPL-3
+PROPERTIES=live
+RDEPEND=x11-libs/gtk+:3 x11-apps/xmodmap x11-libs/gtksourceview:4 python_single_target_python3_10? ( dev-python/pygobject[python_targets_python3_10(-)] dev-python/pydbus[python_targets_python3_10(-)] dev-python/pydantic[python_targets_python3_10(-)] dev-python/python-evdev[python_targets_python3_10(-)] dev-python/setuptools[python_targets_python3_10(-)] ) python_single_target_python3_11? ( dev-python/pygobject[python_targets_python3_11(-)] dev-python/pydbus[python_targets_python3_11(-)] dev-python/pydantic[python_targets_python3_11(-)] dev-python/python-evdev[python_targets_python3_11(-)] dev-python/setuptools[python_targets_python3_11(-)] ) python_single_target_python3_10? ( dev-lang/python:3.10 ) python_single_target_python3_11? ( dev-lang/python:3.11 ) python_single_target_python3_10? ( >=dev-python/setuptools-67.8.0-r1[python_targets_python3_10(-)] ) python_single_target_python3_11? ( >=dev-python/setuptools-67.8.0-r1[python_targets_python3_11(-)] )
+REQUIRED_USE=^^ ( python_single_target_python3_10 python_single_target_python3_11 )
+RESTRICT=!test? ( test )
+SLOT=0
+_eclasses_=toolchain-funcs	0c8a0b0d318eb5d5180d114bd3f6592b	multilib	c19072c3cd7ac5cb21de013f7e9832e0	flag-o-matic	ad475baa777c9978fa035216c8264a10	out-of-source-utils	1a9007554652a6e627edbccb3c25a439	multibuild	30dbf3c5a31db09a19f31ad0a68f2405	multiprocessing	b4e253ab22cef7b1085e9b67c7a3b730	ninja-utils	f3010c780f65d1bb5aea15a9af1adc9c	python-utils-r1	7f2c0a7465411e0f3a6db30e966155d6	python-single-r1	75118e916668a74c660a13b0ecb22562	distutils-r1	b7cd5736a595ec0df9b164d5aec6f228	systemd	5f4bb0758df2e483babf68cd517078ca	git-r3	2358a7b20091609e24bd3a83b3ac5991
+_md5_=1964c9870c744c9a2cc1caeabd69ffbb

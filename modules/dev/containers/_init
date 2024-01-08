@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/dev-containers )
+
+module_configure() {
+    # Set subuid and subgid
+    sudo touch /etc/subuid /etc/subgid
+    sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 "$USER"
+    # Remove
+    # sudo usermod --del-subuids 100000-165535 --del-subgids 100000-165535 $USER
+}

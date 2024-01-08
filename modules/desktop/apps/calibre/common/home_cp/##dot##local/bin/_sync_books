@@ -1,0 +1,11 @@
+#compdef _sync_books sync_books
+
+function _sync_books {
+    local line
+
+    _arguments \
+        "-h[Show help information]" \
+        "--help[Show help information]" \
+        "--pull[Pull from server]" \
+        "--push[Push to server]"
+}

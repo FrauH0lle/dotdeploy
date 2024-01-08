@@ -1,0 +1,6 @@
+# Latest kernel
+sys-kernel/gentoo-kernel-bin
+virtual/dist-kernel
+
+# TLP
+sys-power/tlp

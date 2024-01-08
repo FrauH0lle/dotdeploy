@@ -1,0 +1,23 @@
+# Prepend directory to PATH if directory exists
+# Arguments:
+#   $1 - Directory
+# Env:
+#   $PATH
+# Outputs:
+#   None. Prepends to $PATH and exports.
+prepend_path() {
+  if [ -d "$1" ]; then
+    export PATH="$1:$PATH"
+  fi
+}
+
+# Always prepend directory to PATH
+# Arguments:
+#   $1 - Directory
+# Env:
+#   $PATH
+# Outputs:
+#   None. Prepends to $PATH and exports.
+prepend_path_always() {
+  export PATH="$1:$PATH"
+}

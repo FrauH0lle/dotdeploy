@@ -1,0 +1,5 @@
+# PATCH 2023-08-11: Remove cron files
+post_src_install() {
+    rm "${D}/etc/cron.daily/suse.de-snapper"
+    rm "${D}/etc/cron.hourly/suse.de-snapper"
+}

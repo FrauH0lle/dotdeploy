@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/desktop-plasma )
+
+module_configure() {
+    # Activate pipewire
+    systemctl --user enable --now pipewire.socket pipewire-pulse.socket wireplumber.service
+
+    # Add Flathub repo
+    sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+}

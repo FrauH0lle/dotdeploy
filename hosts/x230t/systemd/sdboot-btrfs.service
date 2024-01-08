@@ -1,0 +1,8 @@
+[Unit]
+Description=Regenerate systemd-boot entries
+
+[Service]
+Type=oneshot
+# Set the possible paths for `sdboot-snapper`
+Environment="PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin"
+ExecStart=/usr/local/bin/sdboot-snapper

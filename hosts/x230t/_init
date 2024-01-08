@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+MODULES=(
+   base
+   shell/bash
+   shell/zsh
+   shell/tools
+   desktop/fonts
+   desktop/spelling
+   desktop/unity
+   editors/emacs
+   hardware/hp-printer
+   hardware/tlp
+   services/samba
+)
+
+_PACKAGES=(
+   app-backup/borgmatic
+   app-admin/keepassxc
+   # Graphic driver
+   x11-drivers/xf86-video-intel
+   # Thermald
+   sys-power/thermald
+)
+
+host-base() {
+   # Portage config
+   # Create directories if missing
+   _PORTAGE_DIRS=(
+      /etc/portage/package.accept_keywords
+      /etc/portage/package.use
+      /etc/portage/patches
+   )
+   for dir in "${_PORTAGE_DIRS[@]}"; do
+      [[ -d $dir ]] || sudo mkdir -p "$dir"
+   done
+
+   # Link make.conf
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/portage.make.conf /etc/portage/make.conf
+   # USE flags
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/zzz-host.use /etc/portage/package.use/zzz-host
+   # # Keywords
+   # sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/zzz-host.keywords /etc/portage/package.accept_keywords/zzz-host
+   # Env
+   # Update systemd-boot after systemd update
+   sudo mkdir -p /etc/portage/env/sys-apps
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/systemd.env /etc/portage/env/sys-apps/systemd
+}
+
+host-install() {
+   # Install packages
+   emerge_needed "${_PACKAGES[@]}"
+
+   # systemd-boot updater
+   sudo install -Dm755 -t /usr/local/bin/ "$DOTFILES/bin/sdboot-up"
+   # snapper-wrapper
+   sudo install -Dm755 -t /usr/local/bin/ "$DOTFILES/bin/snapper-wrapper"
+   # btrfs snapshot integration for systemd-boot
+   sudo install -Dm755 -t /usr/local/bin/ "$DOTFILES/bin/sdboot-snapper"
+   sudo install -Dm644 -t /etc/systemd/system/ "$(dirname $(realpath ${BASH_SOURCE[0]}))/systemd/sdboot-btrfs.path"
+   sudo install -Dm644 -t /etc/systemd/system/ "$(dirname $(realpath ${BASH_SOURCE[0]}))/systemd/sdboot-btrfs.service"
+
+   # Enable fstrim
+   sudo systemctl enable fstrim.timer
+
+   # System tweaks
+   sudo mkdir -p /etc/udev/rules.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/60-ioschedulers.rules" /etc/udev/rules.d/60-ioschedulers.rules
+   sudo mkdir -p /etc/sysctl.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/99-swappiness.conf" /etc/sysctl.d/99-swappiness.conf
+   sudo mkdir -p /etc/sysctl.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/99-networking.conf" /etc/sysctl.d/99-networking.conf
+   sudo mkdir -p /etc/modules-load.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/tcp_bbr.conf" /etc/modules-load.d/tcp_bbr.conf
+
+   # i915 module configuration
+   sudo mkdir -p /etc/modprobe.d
+   sudo cp -fv "$(dirname $(realpath ${BASH_SOURCE[0]}))/50-i915.conf" /etc/modprobe.d/50-i915.conf
+   sudo mkdir -p /etc/X11/xorg.conf.d/
+   sudo cp -fv "$(dirname $(realpath ${BASH_SOURCE[0]}))/20-intel.conf" /etc/X11/xorg.conf.d/20-intel.conf
+
+   # Thermald
+   sudo systemctl enable thermald.service
+
+   # # Thinkpad scripts
+   # sudo systemctl enable acpid.service
+}

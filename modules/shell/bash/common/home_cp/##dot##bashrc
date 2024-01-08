@@ -1,0 +1,71 @@
+#
+# ~/.bashrc
+#
+
+# Prompt
+
+endchar="\$"
+if [ "$UID" = "0" ]; then
+    endchar="#"
+fi
+
+FG="\[\033[38;5;081m\]"
+BG="\[\033[38;5;245m\]"
+AT="\[\033[38;5;245m\]"
+HCOLOR="\[\033[38;5;206m\]"
+
+PS1="${FG}\u${AT}@${HCOLOR}\H ${BG}\w ${FG}$endchar \[\e[0m\]"
+
+unset FG
+unset BG
+unset AT
+unset HCOLOR
+shopt -s checkwinsize
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# Set prompt for Emacs TRAMP
+if [[ $TERM = dumb ]]; then
+    return
+fi
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
+
+# append to the history file, don't overwrite it
+shopt -s histappend
+
+# for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+# Check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+#shopt -s globstar
+
+# This requires https://forums.gentoo.org/viewtopic-t-1085654-start-0.html
+# make less more friendly for non-text input files, see lesspipe(1)
+# [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/bash lesspipe)"
+
+
+#
+## Custom settings
+[[ -f $HOME/.commonrc ]] && source "$HOME/.commonrc"
+
+IS_BASH="true"
+IS_ZSH="false"
+
+# Environment
+[[ -f $HOME/.env.sh ]] && source "$HOME/.env.sh"
+
+# fzf
+[[ -f $HOME/.fzf.sh ]] && source "$HOME/.fzf.sh"
+
+# Aliases
+[[ -f $HOME/.aliases.sh ]] && source "$HOME/.aliases.sh"

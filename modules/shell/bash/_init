@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+depends=( shell/common )
+
+packages=( dotfiles-modules/shell-bash )

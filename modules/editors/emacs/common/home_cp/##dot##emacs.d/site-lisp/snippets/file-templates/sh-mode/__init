@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+$0
+_PACKAGES=()
+_OPTDEPS=()
+
+install() {
+    :
+}
+
+link() {
+    :
+}
+
+update() {
+    :
+}
+
+clean() {
+    :
+}
+
+remove() {
+    :
+}
+
+# TODO Adjust depth as necessary
+source ../../lib && "$@"

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# Make sure we are root
+if [[ $EUID -ne 0 ]]; then
+   echo "Must be run as root, aborting."
+   exit 1
+fi
+
+cmd="$@"
+snapper -c root create --command "${cmd}" --description "${cmd}"

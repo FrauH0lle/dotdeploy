@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+depends=(
+   # test/foo
+   base
+   shell/bash
+   shell/zsh
+   desktop/plasma
+   desktop/apps/calibre
+   desktop/apps/libreoffice
+   desktop/fonts
+   desktop/spelling
+   editors/emacs
+   hardware/hp-printer
+   dev/R
+   dev/containers
+   services/samba
+   vm/virtualbox
+   browsers/vivaldi
+   backup/snapper
+)
+
+packages=( dotfiles-modules/host-yamato )
+
+module_configure() {
+   # Enable fstrim
+   sudo systemctl enable fstrim.timer
+}

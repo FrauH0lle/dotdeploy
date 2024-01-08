@@ -1,0 +1,4 @@
+# PATCH 2023-08-11: Ammed wsdd ebuild to include /etc/default/wsdd
+post_src_install() {
+    install -D -m 644 "etc/systemd/wsdd.defaults" "${D}/etc/default/wsdd"
+}

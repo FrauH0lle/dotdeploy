@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/editors-emacs )
+
+module_configure() {
+    # Clone .emacs.d config
+    dd::common::ensure_repo git@github.com:FrauH0lle/emacs.d.git ~/.emacs.d
+
+    # Message
+    MSG=$(cat <<-END
+    Remember to install emacs via 'emacs-config deploy'.
+END
+       )
+    dd::log::store_messages "editors/emacs" "$MSG"
+}

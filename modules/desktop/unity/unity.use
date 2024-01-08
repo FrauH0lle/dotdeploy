@@ -1,0 +1,14 @@
+unity-base/unity gles2
+unity-base/compiz gles2
+unity-base/nux gles2
+
+unity-base/unity systray
+
+unity-indicators/unity-indicators-meta paste
+
+unity-base/unity-meta -chat -games
+
+x11-misc/lightdm non_root
+
+gnome-base/gvfs samba
+unity-base/unity-control-center samba

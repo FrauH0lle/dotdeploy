@@ -1,0 +1,19 @@
+# # Use latest
+# kde-plasma/*
+# kde-apps/*
+# kde-frameworks/*
+# kde-misc/*
+#
+# dev-libs/plasma-wayland-protocols
+# app-cdr/dolphin-plugins-mountiso
+# app-crypt/gpgme
+# sys-block/partitionmanager
+# sys-libs/kpmcore
+# media-libs/kimageannotator
+# media-libs/kcolorpicker
+#
+# # Pipewire
+# media-video/pipewire
+# media-video/wireplumber
+#
+# x11-themes/kvantum

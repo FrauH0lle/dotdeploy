@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+
+# Automatisches Sichern/Kopieren von anzugebenden Ordner mit Hilfe von "rsync" und cronjob
+#
+# Angabe der Ordner die gesichert werden soll.
+# ACHTUNG
+# /[Ordner]/ ; Inhalt des Ordners wird gesichert
+# /[Ordner] ; Ordner wird gesichert
+SOURCE="$HOME/Bücher/"
+
+# Ziel des Backups auf dem entfernten Rechner.
+TARGET="$HOME/Dokumente/Bücher/"
+
+# Parameter zum Synchronisieren
+# --delete bewirkt ein Datenabgleich inklusive Löschen auf dem Backupmedium
+RSYNCCONF="--delete"
+
+# Dateiname des Logfile
+LOGFILE="rsync_log.log"
+
+# Ort der Binär-Datei von "rsync"
+RSYNC="$(which rsync)"
+
+# Help
+function _help {
+    printf "Usage: books_transfer [DIRECTION] \n\n"
+    printf "Options:\n"
+    printf "  --pull       Pull from server\n"
+    printf "  --push       Push to server\n"
+    printf "  -h/--help    Show this help\n"
+}
+
+# If no hostname is provided, print help and exit
+if [ $# -eq 0 ]; then
+    printf "No arguments provided\n"
+    _help
+    exit 1
+fi
+
+# Parse options
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="$1"
+
+    case $key in
+        -h|--help)
+            _HELP=1
+            shift # past argument
+            ;;
+        --pull)
+            _PULL=1
+            shift # past argument
+            ;;
+        --push)
+            _PUSH=1
+            shift # past argument
+            ;;
+        *)  # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
+            ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+if [[ ! -z "$_HELP" ]]; then
+    _help
+    exit 0
+fi
+
+# Befehl
+if [[ ! -z "$_PULL" ]]; then
+    # Sync Cloud zu Local
+    $RSYNC -avrPuE $RSYNCCONF $TARGET $SOURCE;
+    exit 0
+fi
+
+if [[ ! -z "$_PUSH" ]]; then
+    # Sync Local zu Cloud
+    $RSYNC -avrPuE $RSYNCCONF $SOURCE $TARGET;
+    exit 0
+fi
+
+exit 0

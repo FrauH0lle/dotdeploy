@@ -1,0 +1,50 @@
+#
+## KDE Utils
+kde-plasma/plasma-meta browser-integration discover
+kde-plasma/plasma-workspace appstream
+# Remove Falkon browser
+kde-apps/kdecore-meta -webengine
+
+# Dolphin samba integration
+kde-apps/kio-extras samba
+
+# Dolphin nextcloud integration
+net-misc/nextcloud-client dolphin
+
+# File formats for ark
+kde-apps/kdeutils-meta 7zip cups gpg lrz rar
+# Do not integrate into UI, ark is enough
+app-arch/p7zip -kde
+
+# openconnect
+kde-plasma/plasma-nm openconnect
+
+
+#
+## Geolocation service
+*/* geolocation
+dev-qt/qtpositioning geoclue
+
+
+#
+## Pipewire
+media-video/pipewire gstreamer liblc3 lv2 pipewire-alsa sound-server v4l
+media-sound/pulseaudio -daemon
+
+
+#
+## Evolution email client
+mail-client/evolution ldap spamassassin ytnef
+gnome-extra/evolution-data-server ldap oauth
+media-libs/clutter egl
+media-libs/cogl gles2
+# Use gnome-keyring
+*/* gnome-keyring
+
+# Cron job to auto update spam list
+mail-filter/spamassassin cron
+
+
+#
+## Flatpak
+*/* flatpak

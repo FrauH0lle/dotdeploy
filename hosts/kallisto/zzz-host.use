@@ -1,0 +1,27 @@
+#
+## systemd-boot
+sys-apps/systemd boot kernel-install cryptsetup
+
+#
+## Grahics card
+# Drivers
+# The "-*" removes all values, then we add the drivers
+*/* VIDEO_CARDS: -* amdgpu radeonsi
+
+# Use amdgpu
+x11-base/xorg-drivers -video_cards_radeonsi
+x11-libs/libdrm video_cards_radeon
+
+# Hardware acceleration
+*/* vaapi vdpau
+
+
+#
+## Language support
+*/* L10N: de de-DE en en-US en-GB
+
+
+#
+## https://wiki.archlinux.org/title/Lenovo_ThinkPad_T14s_(AMD)_Gen_3#Speakers
+media-sound/easyeffects calf mda-lv2 zamaudio
+media-plugins/calf lv2

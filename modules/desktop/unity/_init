@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+_PACKAGES=()
+_OPTDEPS=()
+
+MSG=$(cat <<-EOF
+Select gentoo-unity7 via 'eselect profile list' and 'eselect profile set'.
+
+Set variable EHOOKS_ACCEPT="yes" in /etc/portage/make.conf
+
+Install the package to setup the Unity7 build environment:
+
+emerge -av unity-build-env
+
+Update the whole system:
+
+emerge -avuDU --with-bdeps=y @world
+
+Install the Unity7:
+
+emerge -av unity-meta
+EOF
+   )
+
+install() {
+    # Add repository
+    sudo eselect repository add gentoo-unity7 git https://github.com/c4pp4/gentoo-unity7.git
+    sudo emaint sync -r gentoo-unity7
+
+    # USE flags
+    sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/unity.use /etc/portage/package.use/unity
+
+    dd::log::store_messages "$_MODULE" "$MSG"
+}
+
+link() {
+    :
+}
+
+update() {
+    :
+}
+
+clean() {
+    :
+}
+
+remove() {
+    :
+}
+
+source ../../../lib && "$@"

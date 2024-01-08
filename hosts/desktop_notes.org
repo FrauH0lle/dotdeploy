@@ -1,0 +1,23 @@
+#+TITLE: desktop_notes
+
+* I/O scheduler
+
+/etc/udev/rules.d/60-ioschedulers.rules
+#+BEGIN_SRC shell
+# set scheduler for NVMe
+ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
+# set scheduler for SSD and eMMC
+ACTION=="add|change", KERNEL=="sd[a-z]|mmcblk[0-9]*", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+# set scheduler for rotating disks
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
+#+END_SRC
+
+* NetworkManager WiFi Power Saving
+
+/etc/NetworkManager/conf.d/wifi-powersave-off.conf
+#+BEGIN_SRC shell
+# File to be place under /etc/NetworkManager/conf.d
+[connection]
+# Values are 0 (use default), 1 (ignore/don't touch), 2 (disable) or 3 (enable).
+wifi.powersave = 2
+#+END_SRC

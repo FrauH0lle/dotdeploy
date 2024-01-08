@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+packages=(fooby dooby snooby)
+
+pre_module_setup() {
+    echo "hey, we are in test/foo : pre_module_setup"
+}
+
+module_setup() {
+    echo "hey, we are in test/foo : module_setup"
+
+}
+
+post_module_setup() {
+    echo "hey, we are in test/foo : post_module_setup"
+
+}
+
+pre_module_deploy() {
+    echo "hey, we are in test/foo : pre_module_deploy"
+
+}
+
+module_deploy() {
+    echo "hey, we are in test/foo : module_deploy"
+
+}
+
+post_module_deploy() {
+    echo "hey, we are in test/foo : post_module_deploy"
+
+}
+
+pre_module_configure() {
+        echo "hey, we are in test/foo : pre_module_configure"
+
+}
+
+module_configure() {
+    echo "hey, we are in test/foo : module_configure"
+
+}
+
+post_module_configure() {
+    echo "hey, we are in test/foo : post_module_configur"
+
+}
+
+# install() {
+#     # USE flags
+#     sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/bash.use /etc/portage/package.use/bash
+
+#     # Install packages
+#     sudo emerge --verbose dotfiles-modules/shell-bash || exit 1
+# }
+
+# link() {
+#     link_dots
+# }
+
+# update() {
+#     :
+# }
+
+# clean() {
+#     cleanup_dots
+# }
+
+# remove() {
+#     :
+# }
+
+# source ../../../lib && "$@"

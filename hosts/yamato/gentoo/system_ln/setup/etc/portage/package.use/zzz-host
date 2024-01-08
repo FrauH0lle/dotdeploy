@@ -1,0 +1,21 @@
+#
+## systemd-boot
+sys-apps/systemd boot kernel-install
+
+#
+## Grahics card
+# Drivers
+# The "-*" removes all values, then we add the drivers
+*/* VIDEO_CARDS: -* amdgpu radeonsi
+
+# Use amdgpu
+x11-base/xorg-drivers -video_cards_radeonsi
+x11-libs/libdrm video_cards_radeon
+
+# Hardware acceleration
+*/* vaapi vdpau
+
+
+#
+## Language support
+*/* L10N: de de-DE en en-US en-GB

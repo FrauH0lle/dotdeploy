@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/services-samba )
+
+module_configure() {
+    # Activate sysusers
+    sudo systemd-sysusers
+
+    # Add user to Samba usershare group
+    sudo gpasswd -a "$USER" sambashares
+
+    sudo systemctl enable smb
+    sudo systemctl enable wsdd
+
+    MSG=$(cat <<-EOF
+Manage Samba authentication for named users:
+
+# Add the some_user account to the Samba login db
+sudo smbpasswd -a some_user
+
+# Enable the some_user account in the Samba login db
+sudo smbpasswd -e some_user
+
+# Try to log in to a running Samba instance as some_user and list shares
+smbclient -U some_user -L localhost
+
+# Disable the some_user account in the Samba login db
+sudo smbpasswd -d some_user
+
+# Remove the some_user account from the Samba login db
+sudo smbpasswd -x some_user
+EOF
+       )
+
+    dd::log::store_messages "services/samba" "$MSG"
+}

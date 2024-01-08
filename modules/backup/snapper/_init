@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/backup-snapper )
+
+
+module_configure() {
+    sudo systemctl enable --now snapper-cleanup.timer snapper-timeline.timer
+    sudo systemctl enable --now grub-btrfsd.service
+
+    MSG=$(cat <<-EOF
+Do not forget to edit /etc/snapper/configs/root and
+/etc/default/grub-btrfs/config.
+
+If 'snapper -c root create-config /' causes an error, then:
+
+Unmount /.snapshots if it is mounted
+
+Delete /.snapshots
+
+Run
+# snapper -c root create-config /
+
+Now that snapper is happily configured, delete /.snapshots. Note that it is a subvolume - not a folder
+
+# btrfs subvolume delete /.snapshots
+
+Create the mountpoint again
+# mkdir /.snapshots
+# chmod 750 /.snapshots
+
+Mount the subvol_snapshots subvolume to /.snapshots
+# mount /.snapshots
+EOF
+       )
+
+    dd::log::store_messages "backup/snapper" "$MSG"
+}

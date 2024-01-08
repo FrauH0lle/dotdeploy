@@ -1,0 +1,19 @@
+diff --git a/meson.build b/meson.build
+index 09e7aa6..dfe45aa 100644
+--- a/meson.build
++++ b/meson.build
+@@ -73,10 +73,10 @@ config_h = configure_file(
+ )
+ config_h_dir = include_directories('.')
+ 
+-subdir('coredump')
+-subdir('modprobe')
+-subdir('tweaks')
+-subdir('xorg')
++# subdir('coredump')
++# subdir('modprobe')
++# subdir('tweaks')
++# subdir('xorg')
+ subdir('cpu-powersave')
+ subdir('man')
+ 

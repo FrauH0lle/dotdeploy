@@ -1,0 +1,4 @@
+*/* -emacs
+sys-devel/gcc jit
+app-editors/emacs cairo dynamic-loading -games harfbuzz json libxml2 m17n-lib ssl wide-int xft jit tree-sitter sqlite
+app-text/texlive* extra games graphics humanities music pstricks publishers science xetex

@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+
+host_modules=(
+   base
+   shell/bash
+   shell/zsh
+   # shell/tools
+   desktop/plasma
+   desktop/apps/calibre
+   desktop/apps/libreoffice
+   desktop/fonts
+   desktop/spelling
+   editors/emacs
+   hardware/hp-printer
+   dev/R
+   dev/containers
+   services/samba
+   vm/virtualbox
+   browsers/vivaldi
+   backup/snapper
+)
+
+host-base() {
+   # Portage config
+   # Create directories if missing
+   _PORTAGE_DIRS=(
+      /etc/portage/package.accept_keywords
+      /etc/portage/package.use
+      /etc/portage/patches
+   )
+   for dir in "${_PORTAGE_DIRS[@]}"; do
+      [[ -d $dir ]] || sudo mkdir -p "$dir"
+   done
+
+   # Link make.conf
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/portage.make.conf /etc/portage/make.conf
+
+   # USE flags
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/zzz-host.use /etc/portage/package.use/zzz-host
+
+   # Keywords
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/zzz-host.keywords /etc/portage/package.accept_keywords/zzz-host
+
+   # Env
+   # Copy Kernels after update
+   sudo mkdir -p /etc/portage/env/sys-kernel
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/gentoo-kernel-bin.env /etc/portage/env/sys-kernel/gentoo-kernel-bin
+
+   # Module blacklist
+   sudo mkdir -p /etc/modprobe.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/blacklist.conf /etc/modprobe.d/blacklist.conf
+
+   # Systemd tweaks
+   sudo mkdir -p /etc/systemd/system.conf.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/00-timeout.conf /etc/systemd/system.conf.d/00-timeout.conf
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/sys-limits.conf /etc/systemd/system.conf.d/limits.conf
+
+   sudo mkdir -p /etc/systemd/user.conf.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/user-limits.conf /etc/systemd/user.conf.d/limits.conf
+
+   sudo mkdir -p /etc/security/limits.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))"/99-esync.conf /etc/security/limits.d/99-esync.conf
+}
+
+host-install() {
+   # Install packages
+   sudo emerge --verbose dotfiles-modules/host-kallisto || exit 1
+
+   # Enable fstrim
+   sudo systemctl enable fstrim.timer
+
+   # System tweaks
+   sudo mkdir -p /etc/udev/rules.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/60-ioschedulers.rules" /etc/udev/rules.d/60-ioschedulers.rules
+   # sudo mkdir -p /etc/NetworkManager/conf.d
+   # sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/wifi-powersave-off.conf" /etc/NetworkManager/conf.d/wifi-powersave-off.conf
+   sudo mkdir -p /etc/sysctl.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/99-kernel.conf" /etc/sysctl.d/99-kernel.conf
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/99-swappiness.conf" /etc/sysctl.d/99-swappiness.conf
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/99-networking.conf" /etc/sysctl.d/99-networking.conf
+   sudo mkdir -p /etc/modules-load.d
+   sudo ln -sfv "$(dirname $(realpath ${BASH_SOURCE[0]}))/tcp_bbr.conf" /etc/modules-load.d/tcp_bbr.conf
+}

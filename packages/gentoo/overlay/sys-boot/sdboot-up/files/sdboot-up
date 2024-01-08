@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+# Make sure we are root
+if [[ $EUID -ne 0 ]]; then
+   echo "Must be run as root, aborting."
+   exit 1
+fi
+
+# Exit on any error (-e), treat unset variables as errors (-u), and make sure
+# that any errors inside pipes cause the script to exit (pipefail).
+set -euo pipefail
+
+# Kernel patterns and versions to look for
+KERNEL_NAMES=( "gentoo-dist" )
+KERNEL_VERSIONS=( "" )
+# New kernel names
+KERNEL_NEW_NAMES=( "gentoo-dist" )
+
+# Check if the config file exists, and source it if it does
+CONFIG_FILE="/etc/default/sdboot-up"
+if [[ -f "$CONFIG_FILE" ]]; then
+    source "$CONFIG_FILE"
+fi
+
+# Define the source and destination directories
+src_dir="/boot"
+dst_dir="/boot/efi"
+
+# Function to get the highest version from a sorted list
+get_highest_version() {
+    local sorted_versions=("$@")
+    echo "${sorted_versions[-1]}"
+}
+
+# Iterate over each KERNEL_NAME
+for idx in "${!KERNEL_NAMES[@]}"; do
+    name="${KERNEL_NAMES[$idx]}"
+    version="${KERNEL_VERSIONS[$idx]}"
+    target="${KERNEL_NEW_NAMES[$idx]}"
+
+    echo "Looking for files matching $name ..."
+    # Use regex to match files with name pattern
+    matching_files=($(find "$src_dir" -maxdepth 1 -printf "%f\n" | grep -E "${name}"))
+
+    # If version is empty, get the highest version number
+    if [[ -z "$version" ]]; then
+        # Extract the versions and sort them
+        sorted_versions=($(printf "%s\n" "${matching_files[@]}" | grep -oP '(?<=-)[0-9.]+(?=-)' | sort -V))
+        highest_version=$(get_highest_version "${sorted_versions[@]}")
+    else
+        echo "Looking for files matching $version ..."
+        sorted_versions=($(printf "%s\n" "${matching_files[@]}" | grep -oP "(?<=-)$version[0-9.]*(?=-)" | sort -V))
+        highest_version=$(get_highest_version "${sorted_versions[@]}")
+    fi
+
+    # Collect files which match version number
+    to_copy=()
+    for file in "${matching_files[@]}"; do
+        if [[ $file =~ $highest_version ]]; then
+            to_copy+=("$file")
+        fi
+    done
+
+    if [[ -z "$to_copy" ]]; then
+        echo "No files found matching $name."
+        continue
+    else
+        echo "Found:"
+        printf '%s\n' "${to_copy[@]}"
+    fi
+
+    # Copy matching files to new folder
+    for file in "${to_copy[@]}"; do
+        new_name=$(echo "$file" | sed -E "s/${name}/${target}/" | sed -E "s/-[0-9.]+-/-/")
+        cp -v "$src_dir/$file" "$dst_dir/$new_name"
+    done
+done

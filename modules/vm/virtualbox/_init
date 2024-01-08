@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/vm-virtualbox )
+
+module_configure() {
+    sudo gpasswd -a "$USER" vboxusers
+    # sudo gpasswd -a $USER vboxsf
+}

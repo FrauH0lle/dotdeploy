@@ -1,0 +1,4 @@
+*/* SANE_BACKENDS: hp
+
+net-print/hplip scanner
+net-dns/avahi python

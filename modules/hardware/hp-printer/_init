@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+packages=( dotfiles-modules/hardware-hp-printer )
+
+module_configure() {
+    sudo systemctl enable cups.socket
+
+    sudo gpasswd -a "$USER" lp
+    sudo gpasswd -a "$USER" lpadmin
+    sudo gpasswd -a "$USER" scanner
+}

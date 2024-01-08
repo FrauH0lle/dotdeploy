@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+
+# Terminate if command returns non-zero exit status
+set -o errexit
+# Terminate if variable is used which has not been initialized
+set -o nounset
+
+# FIXME: Move to better place
+# set -o xtrace
+DOTDEPLOY_TMP_DIR=$(mktemp --directory -t dotdeploy.XXXXXXX)
+readonly DOTDEPLOY_TMP_DIR
+
+# Source library
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/init.sh
+
+# Collect environment information
+host_name="${host_name:-$(dd::common::detect_host)}"
+host_os="${host_os:-$(dd::common::detect_os)}"
+is_container="${is_container:-$(dd::common::detect_container)}"
+dryrun=0
+
+# Print usage to stdout.
+# Arguments:
+#   None
+# Outputs:
+#   Print usage with examples.
+show_help() {
+    cat << EOF
+DotDeploy - Deploy dotfiles and system configuration
+
+Usage:
+
+    dotdeploy [options] <command>
+
+For more information on a specific command, you can use 'dotdeploy <command> help'.
+
+Choose one of the available commands:
+       deploy               Deploy dotfiles
+       help, -h, --help     Show this help message
+
+Options:
+       --dry-run            Only print the commands
+EOF
+}
+
+
+# If nothing is provided, show help and exit
+if [[ $# -eq 0 ]]; then
+    show_help
+    exit
+fi
+
+# Activate logging
+dd::log::log_on
+
+dd::log::log-info "Host is $host_name"
+dd::log::log-info "Running $host_os"
+dd::log::log-info "Are we in a container? $is_container"
+
+dd::log::log-info "TMP directory set to: $DOTDEPLOY_TMP_DIR"
+
+# Parse arguments
+unknown=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        help | --help | -h)
+            # Deactivate logging
+            dd::log::log_off
+            # Show help message
+            show_help
+            exit 0
+            ;;
+        --dry-run)
+            shift
+            dryrun=1
+            ;;
+        deploy)
+            # Deploy modules
+            shift # past argument
+            source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/dotdeploy-deploy
+            dotdeploy_deploy "$@"
+            break
+            ;;
+        *)  # Unknown option
+            unknown+=( "$1" )
+            shift
+            ;;
+    esac
+done
+
+set -- "${unknown[@]}" # Restore unknown arguments
+if [[ ! ${#unknown[@]} -eq 0 ]]; then
+    dd::log::log-fail "Invalid command: ${unknown[*]}"
+    show_help
+    exit 1
+fi

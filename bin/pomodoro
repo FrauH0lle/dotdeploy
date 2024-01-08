@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+notify-send "Start working!" --icon=dialog-warning
+sleep 24m
+notify-send "Get ready for 5 min break!" "1 min till screen lock! Get off the PC ..." --icon=dialog-warning
+sleep 1m
+qdbus org.freedesktop.ScreenSaver /ScreenSaver Lock
+notify-send "Continue working!" "Press key in terminal" --icon=dialog-warning --urgency=critical
+read -n 1 -s -r -p "Press any key to continue ..."
+notify-send "Start working!" --icon=dialog-warning
+sleep 24m
+notify-send "Get ready for big 15 min break!" "1 min till sleep! Get off the PC and do something reasonable ..." --icon=dialog-warning
+sleep 1m
+systemctl suspend
+notify-send "Done!" "Restart in terminal if you want to be productive again." --icon=dialog-warning --urgency=critical

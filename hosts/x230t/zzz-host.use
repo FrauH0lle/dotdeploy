@@ -1,0 +1,5 @@
+# Bootloader
+sys-apps/systemd gnuefi cryptsetup
+
+# Vivaldi browser
+www-client/vivaldi proprietary-codecs
