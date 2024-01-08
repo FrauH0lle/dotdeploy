@@ -11,7 +11,7 @@ DOTDEPLOY_TMP_DIR=$(mktemp --directory -t dotdeploy.XXXXXXX)
 readonly DOTDEPLOY_TMP_DIR
 
 # Source library
-source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/init.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/common.sh
 
 # Collect environment information
 host_name="${host_name:-$(dd::common::detect_host)}"
