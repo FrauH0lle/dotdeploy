@@ -6,6 +6,7 @@
 
 # Expected system env variables:
 # XDG_DATA_HOME
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
 
 
 #
