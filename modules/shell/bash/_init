@@ -2,4 +2,8 @@
 
 depends=( shell/common )
 
-packages=( dotdeploy/shell-bash )
+case "$host_os" in
+    gentoo)
+        packages=( dotdeploy/shell-bash )
+        ;;
+esac

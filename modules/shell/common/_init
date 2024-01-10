@@ -1,3 +1,10 @@
 #!/usr/bin/env bash
 
-packages=( dotdeploy/shell-common )
+case "$host_os" in
+    gentoo)
+        packages=( dotdeploy/shell-common )
+        ;;
+    ubuntu)
+        packages=( dotdeploy-shell-common )
+        ;;
+esac

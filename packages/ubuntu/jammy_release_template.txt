@@ -1,0 +1,6 @@
+Origin: Dotdeploy_Local_Repo
+Label: Dotdeploy_Local_Repo
+Codename: jammy
+Architectures: amd64
+Components: main
+Description: Dotdeploy local APT repository

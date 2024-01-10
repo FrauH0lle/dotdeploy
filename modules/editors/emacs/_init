@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 
-packages=( dotdeploy/editors-emacs )
+case "$host_os" in
+    gentoo)
+        packages=( dotdeploy/editors-emacs )
+        ;;
+    ubuntu)
+        packages=( dotdeploy-editors-emacs )
+        ;;
+esac
+
+module_setup() {
+    if [[ $host_os == "ubuntu" ]]; then
+        dd::common::elevate_cmd add-apt-repository -y ppa:ubuntuhandbook1/emacs
+        dd::common::elevate_cmd apt-get update
+    fi
+}
 
 module_configure() {
     # Clone .emacs.d config

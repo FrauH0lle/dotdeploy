@@ -292,6 +292,8 @@ dd::common::install_pkgs() {
             # --deep also includes dependencies.
             dd::common::elevate_cmd emerge --verbose --changed-use --deep "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
             ;;
+        ubuntu)
+            dd::common::elevate_cmd apt-get install -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
     esac
 }
 

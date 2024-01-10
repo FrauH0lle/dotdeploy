@@ -40,4 +40,50 @@ case "$host_os" in
             dd::common::elevate_cmd mkdir -p /etc/portage/patches
         fi
         ;;
+    ubuntu)
+        # Make sure equivs and dpkg-dev are installed
+        if dd::common::check_uncallable equivs-build; then
+            dd::common::elevate_cmd apt-get install -y equivs
+        fi
+        if dd::common::check_uncallable equivs-build; then
+            dd::common::elevate_cmd apt-get install -y dpkg-dev
+        fi
+
+        # Build metapackages
+        pushd "$DOTDEPLOY_ROOT"/packages/ubuntu/sources > /dev/null || exit 1
+        mapfile -t deb_srcs < <(find . -type f)
+        for deb_src in "${deb_srcs[@]}"; do
+            dd::common::dry_run equivs-build "$deb_src"
+        done
+        unset -v deb_srcs
+        unset -v deb_src
+
+        # Create repo folder and copy files
+        if [[ ! -d /var/local/dotdeploy/repo ]]; then
+            dd::common::elevate_cmd mkdir -p /var/local/dotdeploy/repo
+        fi
+
+        mapfile -t deb_files < <(find . -type f -name "*.deb")
+        for deb in "${deb_files[@]}"; do
+            dd::common::elevate_cmd cp "$deb" /var/local/dotdeploy/repo/"$deb"
+        done
+        unset -v deb_files
+        unset -v deb
+
+        dd::common::elevate_cmd cp "$DOTDEPLOY_ROOT"/packages/ubuntu/dotdeploy-update-repo /usr/local/bin/dotdeploy-update-repo
+        dd::common::elevate_cmd chmod +x /usr/local/bin/dotdeploy-update-repo
+
+        # Execute repo script
+        dd::common::elevate_cmd /usr/local/bin/dotdeploy-update-repo
+
+        # Add repository to sources
+        if [[ ! -f /etc/apt/sources.list.d/dotdeploy.list ]]; then
+            dd::common::elevate_cmd ln -sfv "$DOTDEPLOY_ROOT"/packages/ubuntu/dotdeploy.list /etc/apt/sources.list.d/dotdeploy.list
+        fi
+
+        popd "$DOTDEPLOY_ROOT"/packages/ubuntu/sources > /dev/null || exit 1
+
+        # apt update and done
+        dd::common::elevate_cmd apt-get update
+        ;;
 esac
