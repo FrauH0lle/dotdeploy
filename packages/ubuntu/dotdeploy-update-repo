@@ -37,4 +37,4 @@ cat /opt/dotdeploy/packages/ubuntu/jammy_release_template.txt > Release
 # gpg -abs --digest-algo SHA512 --local-user $USER -o Release.gpg Release
 
 # Get apt to see the changes
-sudo apt-get update
+sudo apt-get -q update

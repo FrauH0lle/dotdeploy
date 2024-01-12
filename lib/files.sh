@@ -4,6 +4,10 @@
 [[ $(type -t dd::files::loaded) == function ]] && return 0
 
 
+#
+## Libraries
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/common.sh
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/db.sh
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/log.sh
 
@@ -50,10 +54,10 @@ dd::files::get_all_files() {
                 common_files+=( "$module|$f" )
             done
         fi
-        if [[ -d "$module_path/$host_os" ]]; then
+        if [[ -d "$module_path/$dd_distro" ]]; then
             local distro_files
             local temp
-            mapfile -t temp < <(find "$module_path/$host_os" -type f)
+            mapfile -t temp < <(find "$module_path/$dd_distro" -type f)
             local f
             for f in "${temp[@]}"; do
                 distro_files+=( "$module|$f" )
@@ -67,7 +71,7 @@ dd::files::get_all_files() {
 # Arguments:
 #   $1 - Source file name
 # Env:
-#   $host_os
+#   $dd_distro
 #   $HOME
 # Outputs:
 #   Transformed file name.
@@ -77,7 +81,7 @@ dd::files::transform_filename() {
     IFS='|' read -r module fname <<< "$1"
     # Remove the leading path up to and including either 'common/' or a host OS
     # specific folder
-    fname="${fname#*"$module"/@(common|"$host_os")/}"
+    fname="${fname#*"$module"/@(common|"$dd_distro")/}"
     # Remove the first occurrence of 'setup/'
     fname="${fname/setup\//}"
     # Remove the first occurrence of 'configure/'
@@ -129,8 +133,8 @@ dd::files::extract_prefix_info() {
     for key in "${!key_value_pairs[@]}"; do
         # echo "$key: ${key_value_pairs[$key]}"
         # Check if key-value pairs match conditions
-        if [[ "${key_value_pairs[host]+_}" && "${key_value_pairs[host]}" != "$host_name" ]] ||
-               [[ "${key_value_pairs[os]+_}" && "${key_value_pairs[os]}" != "$host_os" ]]; then
+        if [[ "${key_value_pairs[host]+_}" && "${key_value_pairs[host]}" != "$dd_host_name" ]] ||
+               [[ "${key_value_pairs[os]+_}" && "${key_value_pairs[os]}" != "$dd_distro" ]]; then
             deploy="false"
         fi
     done

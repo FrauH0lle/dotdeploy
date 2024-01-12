@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-case "$host_os" in
+case "$dd_distro" in
     gentoo)
         packages=( dotdeploy/editors-emacs )
         ;;
@@ -10,7 +10,7 @@ case "$host_os" in
 esac
 
 module_setup() {
-    if [[ $host_os == "ubuntu" ]]; then
+    if [[ $dd_distro == "ubuntu" ]]; then
         dd::common::elevate_cmd add-apt-repository -y ppa:ubuntuhandbook1/emacs
         dd::common::elevate_cmd apt-get update
     fi

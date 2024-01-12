@@ -4,9 +4,20 @@
 # HOME
 
 # Expected dotdeploy env variables:
-# host_name
-# host_os
-# is_container
+# dd_host_name
+# dd_distro
+# dd_is_container
+
+
+#
+## Libraries
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/common.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/db.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/log.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/hooks.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/files.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/confgen.sh
 
 
 # Print usage to stdout.
@@ -29,8 +40,8 @@ If modules are not given, they will be read from the host init file.
 
 Options:
     help, -h, --help     Show this help message
-    --host               Set host name
-    --host-os            Set host OS
+    --host               Set hostname
+    --distro             Set distribution
 EOF
 }
 
@@ -39,8 +50,8 @@ EOF
 # Arguments:
 #   $@ Multiple modules
 # Env:
-#   $host_name
-#   $host_os
+#   $dd_host_name
+#   $dd_distro
 #   $found_files
 #   $all_module_files
 #   $DOTDEPLOY_REQ_PKGS
@@ -48,7 +59,7 @@ EOF
 #   None. Will create symlinks and copy files
 dotdeploy_deploy() {
     local modules=()
-    while [[ $# -gt 0 ]]; do
+    while (( $# > 0 )) ; do
         case $1 in
             help | --help | -h)
                 # Deactivate logging
@@ -58,38 +69,44 @@ dotdeploy_deploy() {
                 ;;
             --host)
                 shift # past argument
-                host_name="$1"
-                shift
+                dd_host_name="$1"
                 ;;
-            --host-os)
+            --distro)
                 shift # past argument
-                host_os="$1"
+                dd_distro="$1"
+                ;;
+            --)
                 shift
+                break
+                ;;
+            -*)
+                printf >&2 "Error: Unknown option %s\n" "$1"
+                dd::log::log_off
+                dotdeploy_deploy_help
+                exit 1
                 ;;
             *)  # Default case: Store arguments in modules arrary
                 modules+=( "$1" )
-                shift
                 ;;
         esac
+        # Shift to next argument
+        shift
     done
 
     # Check if host name and os are known
-    if [[ "$host_os" == "unknown" ]]; then
-        dd::log::log-fail "Could not determine OS."
-        dd::log::log-info "You can override this via the --host-os argument."
+    if [[ "$dd_distro" == "unknown" ]]; then
+        dd::log::log-fail "Could not determine the distribution."
+        dd::log::log-info "You can use the override '--distro'."
         exit 1
     fi
 
     # Check if dependencies are available and install if necessary
     dd::common::ensure_deps
 
-    # Source library
-    source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/init.sh
-
     # Run host OS setup function
     # This should ensure that things like custom/personal repositories are in
     # place
-    source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/dotdeploy-prepare
+    source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/prepare.sh
 
     # We know the the host name and try to find an init file in a directory with
     # the same name. This file defines requested modules.
@@ -98,8 +115,9 @@ dotdeploy_deploy() {
 
     local host_init_file
     # FIXME Better path
-    host_init_file="$DOTDEPLOY_HOSTS_DIR"/"$host_name"/_init
+    host_init_file="$DOTDEPLOY_HOSTS_DIR"/"$dd_host_name"/_init
 
+    local install_reason="unknown"
     # If modules are given as arguments, these will be installed. Otherwise,
     # look for the host init.
     if [[ ${#modules[@]} -eq 0 ]]; then
@@ -110,10 +128,12 @@ dotdeploy_deploy() {
             exit 1
         else
             # Assign host module
-            dotdeploy_modules+=( hosts/"$host_name" )
+            dotdeploy_modules+=( hosts/"$dd_host_name" )
+            install_reason="auto"
         fi
     else
         dotdeploy_modules+=( "${modules[@]}" )
+        install_reason="manual"
     fi
 
     # Remove any duplicates in dotdeploy_modules
@@ -340,11 +360,21 @@ dotdeploy_deploy() {
     # If we reached this part without error, we can write the metadata
     local module
     for module in "${dotdeploy_modules[@]}"; do
-        dd::db::write_module_kv "$DOTDEPLOY_DB" "$module" deployed true
-        dd::db::write_module_kv "$DOTDEPLOY_LOCAL_DB" "$module" deployed true
+        for db in "$DOTDEPLOY_DB" "$DOTDEPLOY_LOCAL_DB"; do
+            dd::db::write_module_kv "$db" "$module" deployed true
+            dd::db::write_module_kv "$db" "$module" last_deployed \""$(date +%F)"\"
+            if [[ $install_reason == "auto" ]]; then
+                dd::db::write_module_kv_maybe "$db" "$module" reason \""$install_reason"\"
+            elif [[ $install_reason == "manual" ]]; then
+                dd::db::write_module_kv "$db" "$module" reason \""$install_reason"\"
+            fi
+        done
     done
-    dd::db::write_meta_kv "$DOTDEPLOY_DB" version \""$DOTDEPLOY_VERSION"\"
-    dd::db::write_meta_kv "$DOTDEPLOY_LOCAL_DB" version \""$DOTDEPLOY_VERSION"\"
+    for db in "$DOTDEPLOY_DB" "$DOTDEPLOY_LOCAL_DB"; do
+        dd::db::write_meta_kv "$db" version \""$DOTDEPLOY_VERSION"\"
+        dd::db::write_meta_kv "$db" hostname \""$dd_host_name"\"
+        dd::db::write_meta_kv "$db" linux_distribution \""$dd_distro"\"
+    done
 
     # Generate config files
     dd::confgen::generate env.sh

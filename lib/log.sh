@@ -4,8 +4,9 @@
 [[ $(type -t dd::log::loaded) == function ]] && return 0
 
 
-# Expected system env variables:
-# XDG_DATA_HOME
+#
+## Libraries
+# XDG_DATA_HOME is not necessarily set
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
 
 
@@ -18,7 +19,7 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
 # Outputs:
 #   Message string, prefixed with '+++' in blue and bold
 function dd::log::log-info() {
-    printf "\r\033[2K\033[1;34m +++ \033[0m%s\n" "$*"
+    printf "\r\033[2K\033[1;34m +++ \033[0m%s\n" "$*" >&2
 }
 
 # Print success message
@@ -27,7 +28,7 @@ function dd::log::log-info() {
 # Outputs:
 #   Message string, prefixed with '+++' in green and bold
 function dd::log::log-ok() {
-    printf "\r\033[2K\033[1;32m +++ \033[0m%s\n" "$*"
+    printf "\r\033[2K\033[1;32m +++ \033[0m%s\n" "$*" >&2
 }
 
 # Print warning message
@@ -36,7 +37,7 @@ function dd::log::log-ok() {
 # Outputs:
 #   Message string, prefixed with '+++' in yellow and bold
 function dd::log::log-warn() {
-    printf "\r\033[2K\033[1;33m +++ \033[0m%s\n" "$*"
+    printf "\r\033[2K\033[1;33m +++ \033[0m%s\n" "$*" >&2
 }
 
 # Print failure message
@@ -45,7 +46,7 @@ function dd::log::log-warn() {
 # Outputs:
 #   Message string, prefixed with '+++' in red and bold
 function dd::log::log-fail() {
-    printf "\r\033[2K\033[1;31m +++ \033[0m%s\n" "$*"
+    printf "\r\033[2K\033[1;31m +++ \033[0m%s\n" "$*" >&2
 }
 
 

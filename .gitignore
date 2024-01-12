@@ -1,0 +1,10 @@
+.DS_Store
+.idea
+*.log
+tmp/
+
+# Local database
+/dotdeploy-db.json
+
+# Package files
+*.deb

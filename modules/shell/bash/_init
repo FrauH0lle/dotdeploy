@@ -2,7 +2,7 @@
 
 depends=( shell/common )
 
-case "$host_os" in
+case "$dd_distro" in
     gentoo)
         packages=( dotdeploy/shell-bash )
         ;;

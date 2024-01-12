@@ -4,11 +4,19 @@
 [[ $(type -t dd::db::loaded) == function ]] && return 0
 
 
-# FIXME
+#
+## Libraries
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/common.sh
+
+
+#
+## Environment
 DOTDEPLOY_DB="$DOTDEPLOY_ROOT"/dotdeploy-db.json
 readonly DOTDEPLOY_DB
 DOTDEPLOY_LOCAL_DB="$XDG_DATA_HOME"/dotdeploy/dotdeploy-db.json
 readonly DOTDEPLOY_LOCAL_DB
+
 
 # Ensure JSON database exists
 # Arguments:
@@ -168,6 +176,31 @@ dd::db::write_module_kv() {
             --argjson value "$value" \
             '.modules[$module][$key] = $value' \
             "$db_file"
+    fi
+}
+
+# Add or update a key value pair to a module in the JSON database if it does not
+# exist
+# Arguments:
+#   $1 - Database file
+#   $2 - Module
+#   $3 - Key
+#   $4 - Value
+# Outputs:
+#   None.
+dd::db::write_module_kv_maybe() {
+    local db_file="$1"
+    local module="$2"
+    local key="$3"
+    local value="$4"
+    if [[ "$(jq --arg key "$module" '.modules | has($key)' "$db_file")" == "true" ]]; then
+        if [[ "$(jq --arg module "$module" --arg key "$key" '.modules[$module] | has($key)' "$db_file")" == "false" ]]; then
+            dd::common::jq_dry_run jq --arg module "$module" \
+                --arg key "$key" \
+                --argjson value "$value" \
+                '.modules[$module][$key] = $value' \
+                "$db_file"
+        fi
     fi
 }
 

@@ -3,6 +3,15 @@
 # Short-circuit if confgen.sh has already been sourced
 [[ $(type -t dd::confgen::loaded) == function ]] && return 0
 
+
+#
+## Libraries
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/common.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/db.sh
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/log.sh
+
+
 # Define variables in file with expansion, last to sections get inserted
 # verbatim.
 # Arguments:

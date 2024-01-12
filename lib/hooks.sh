@@ -4,6 +4,9 @@
 [[ $(type -t dd::hooks::loaded) == function ]] && return 0
 
 
+#
+## Libraries
+source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/env.sh
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/log.sh
 
 

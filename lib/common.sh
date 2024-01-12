@@ -4,9 +4,10 @@
 [[ $(type -t dd::common::loaded) == function ]] && return 0
 
 
+#
+## Libraries
 source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/log.sh
 
-DOTDEPLOY_VERSION="0.1.1"
 
 # Detect if a program is installed
 # Arguments:
@@ -31,7 +32,7 @@ dd::common::check_uncallable() {
 #   None
 # Outputs:
 #   Linux distribution ID string or "unknown".
-dd::common::detect_os() {
+dd::common::detect_distro() {
     local os_id="unknown"
     # /etc/os-release should be always present in distribution using systemd
     if [[ -f /etc/os-release ]]; then
@@ -49,11 +50,11 @@ dd::common::detect_os() {
 # Outputs:
 #   "true" if in a container, else "fale".
 dd::common::detect_container() {
-    local is_container="false"
+    local dd_is_container="false"
     if [[ -f /run/.containerenv || -f /.dockerenv || -n "${container:-}" ]]; then
-        is_container="true"
+        dd_is_container="true"
     fi
-    echo "$is_container"
+    echo "$dd_is_container"
 }
 
 # Detect host name
@@ -62,16 +63,16 @@ dd::common::detect_container() {
 # Outputs:
 #   Host name or "unknown"
 dd::common::detect_host() {
-    local host_name="unknown"
+    local dd_host_name="unknown"
     if [[ -f /etc/hostname ]]; then
-        host_name=$(cat /etc/hostname)
-        echo "$host_name"
+        dd_host_name=$(cat /etc/hostname)
+        echo "$dd_host_name"
     elif dd::common::check_callable hostname; then
-        host_name=$(hostname)
-        echo "$host_name"
+        dd_host_name=$(hostname)
+        echo "$dd_host_name"
     else
         dd::log::log-fail "Could not detect host name."
-        echo "$host_name"
+        echo "$dd_host_name"
     fi
 }
 
@@ -96,12 +97,12 @@ dd::common::ensure_repo() {
 # Arguments:
 #   $@ - Command to run with sudo privileges
 # Env:
-#   $dryrun
+#   $dd_dryrun
 # Outputs:
 #   Runs the command with elevated priviliges
 dd::common::elevate_cmd() {
     local cmd=( "$@" )
-    if [[ "$dryrun" -eq 1 ]]; then
+    if [[ "$dd_dryrun" -eq 1 ]]; then
         dd::log::log-info "${cmd[@]}" >&2
     else
         # Ask for sudo password up-front
@@ -124,12 +125,12 @@ dd::common::elevate_cmd() {
 # Arguments:
 #   $@ - Command to run or print
 # Env:
-#   $dryrun
+#   $dd_dryrun
 # Outputs:
 #   Runs or prints the command.
 # Based on https://stackoverflow.com/a/50003418/22738667
 dd::common::dry_run() {
-    if [[ "$dryrun" -eq 1 ]]; then
+    if [[ "$dd_dryrun" -eq 1 ]]; then
         if [[ ! -t 0 ]]; then
             # Read from stdin if data is being piped
             cat
@@ -149,7 +150,7 @@ dd::common::dry_run() {
 # Arguments:
 #   $@ - Command to run or print
 # Env:
-#   $dryrun
+#   $dd_dryrun
 # Outputs:
 #   Runs or prints the jq command.
 # Based on https://stackoverflow.com/a/50003418/22738667
@@ -160,7 +161,7 @@ dd::common::jq_dry_run() {
     local db_file="${args[$len-1]}"
     local args=( "${args[@]:0:$len-1}" )
 
-    if [[ "$dryrun" -eq 1 ]]; then
+    if [[ "$dd_dryrun" -eq 1 ]]; then
         if [[ ! -t 0 ]]; then
             # Read from stdin if data is being piped
             cat
@@ -179,8 +180,8 @@ dd::common::jq_dry_run() {
 # Arguments:
 #   None
 # Env:
-#   $dryrun
-#   $host_os
+#   $dd_dryrun
+#   $dd_distro
 # Outputs:
 #   None or a message
 dd::common::ensure_deps() {
@@ -199,7 +200,7 @@ dd::common::ensure_deps() {
 
     if [ "$git_cmd" = false ] || [ "$jq_cmd" = false ]; then
         dd::log::log-info "Trying to install missing dependencies ..."
-        case "$host_os" in
+        case "$dd_distro" in
             gentoo)
                 if dd::common::check_uncallable equery; then
                     dd::common::elevate_cmd emerge --oneshot --verbose app-portage/gentoolkit || exit 1
@@ -280,12 +281,12 @@ dd::common::register_pkgs() {
 # Arguments:
 #   None
 # Env:
-#   $host_os
+#   $dd_distro
 #   $DOTDEPLOY_REQ_PKGS
 # Outputs:
 #   None
 dd::common::install_pkgs() {
-    case "$host_os" in
+    case "$dd_distro" in
         gentoo)
             # --changed-use will rebuild the a package if its USE flags have
             # changed. Otherwise it won't reinstall it.
@@ -293,7 +294,7 @@ dd::common::install_pkgs() {
             dd::common::elevate_cmd emerge --verbose --changed-use --deep "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
             ;;
         ubuntu)
-            dd::common::elevate_cmd apt-get install -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
+            dd::common::elevate_cmd apt-get install -q -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
     esac
 }
 
