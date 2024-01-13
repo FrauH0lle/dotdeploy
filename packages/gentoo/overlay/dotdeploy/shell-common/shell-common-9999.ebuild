@@ -11,6 +11,7 @@ IUSE=""
 RDEPEND="
 	sys-apps/bat
 	sys-apps/eza
+	sys-apps/fd
 	app-shells/fzf
 	app-text/tree
 "

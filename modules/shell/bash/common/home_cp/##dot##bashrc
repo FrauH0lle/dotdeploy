@@ -27,7 +27,7 @@ case "$TERM" in
         ;;
     # Set prompt for Emacs TRAMP
     dumb)
-        export PS1="> "
+        PS1="> "
         ;;
     *)
         ;;
