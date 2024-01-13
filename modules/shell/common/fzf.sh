@@ -29,19 +29,11 @@ export FZF_DEFAULT_COMMAND='fdfind -H -I'
 export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 ##%% [[ "$dd_distro" == "gentoo" ]]
 export FZF_CTRL_T_OPTS="--preview '([[ -f {} ]] && (bat --style=numbers --color=always {} || cat {})) || ([[ -d {} ]] && (tree -C {} | less)) || echo {} 2> /dev/null | head -200'"
-##%% end
-##%% [[ "$dd_distro" == "ubuntu" ]]
-export FZF_CTRL_T_OPTS="--preview '([[ -f {} ]] && (batcat --style=numbers --color=always {} || cat {})) || ([[ -d {} ]] && (tree -C {} | less)) || echo {} 2> /dev/null | head -200'"
-##%% end
-##%% [[ "$dd_distro" == "gentoo" ]]
 export FZF_ALT_C_COMMAND='fd -H -I --type d'
-##%% end
-##%% [[ "$dd_distro" == "ubuntu" ]]
-export FZF_ALT_C_COMMAND='fdfind -H -I --type d'
-##%% end
-##%% [[ "$dd_distro" == "gentoo" ]]
 export FZF_ALT_C_OPTS="--preview 'eza --long --tree --level=1 --color=auto --icons=auto --group-directories-first -- {}'"
 ##%% end
 ##%% [[ "$dd_distro" == "ubuntu" ]]
+export FZF_CTRL_T_OPTS="--preview '([[ -f {} ]] && (batcat --style=numbers --color=always {} || cat {})) || ([[ -d {} ]] && (tree -C {} | less)) || echo {} 2> /dev/null | head -200'"
+export FZF_ALT_C_COMMAND='fdfind -H -I --type d'
 export FZF_ALT_C_OPTS="--preview 'exa --long --tree --level=1 --color=auto --icons --group-directories-first -- {}'"
 ##%% end
