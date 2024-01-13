@@ -10,7 +10,7 @@ Package: dotdeploy-shell-common
 # Version: <enter version here; defaults to 1.0>
 # Maintainer: Your Name <yourname@example.com>
 # Pre-Depends: <comma-separated list of packages>
-Depends: bat, exa, fzf, tree, fd
+Depends: bat, exa, fzf, tree, fd-find
 # Recommends: <comma-separated list of packages>
 # Suggests: <comma-separated list of packages>
 # Provides: <comma-separated list of packages>
