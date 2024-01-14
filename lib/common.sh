@@ -88,7 +88,7 @@ dd::common::ensure_repo() {
     if [[ ! -d $target ]]; then
         dd::common::dry_run git clone --recursive "$repo" "$target"
     else
-        dd::log::log-info "$repo already present"
+        dd::log::log-ok "$repo already present"
     fi
 }
 
@@ -296,6 +296,16 @@ dd::common::install_pkgs() {
         ubuntu)
             dd::common::elevate_cmd apt-get install -q -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
     esac
+}
+
+dd::common::ensure_ppa() {
+    ppa="$1"
+    if ! grep -q "^deb .*$ppa" /etc/apt/sources.list /etc/apt/sources.list.d/* > /dev/null; then
+        dd::common::elevate_cmd add-apt-repository -y "ppa:$ppa" || exit 1
+        dd::common::elevate_cmd apt-get update
+    else
+        dd::log::log-ok "$ppa already added"
+    fi
 }
 
 # Marker function to indicate common.sh has been fully sourced

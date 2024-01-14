@@ -11,8 +11,7 @@ esac
 
 module_setup() {
     if [[ $dd_distro == "ubuntu" ]]; then
-        dd::common::elevate_cmd add-apt-repository -y ppa:ubuntuhandbook1/emacs
-        dd::common::elevate_cmd apt-get update
+        dd::common::ensure_ppa ubuntuhandbook1/emacs
     fi
 }
 

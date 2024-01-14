@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 
-packages=( dotdeploy/dev-containers )
+case "$dd_distro" in
+    gentoo)
+        packages=( dotdeploy/dev-containers )
+        ;;
+    ubuntu)
+        packages=( dotdeploy-dev-containers )
+        ;;
+esac
+
+module_setup() {
+    if [[ $dd_distro == "ubuntu" ]]; then
+        dd::common::ensure_ppa michel-slm/distrobox
+    fi
+}
 
 module_configure() {
     # Set subuid and subgid
