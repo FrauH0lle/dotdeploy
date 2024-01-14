@@ -51,11 +51,11 @@ case "$dd_distro" in
         # Make sure equivs and dpkg-dev are installed
         if dd::common::check_uncallable equivs-build; then
             dd::common::elevate_cmd apt-get update
-            dd::common::elevate_cmd apt-get install -y equivs
+            dd::common::elevate_cmd DEBIAN_FRONTEND=noninteractive apt-get install -y -q equivs
         fi
         if dd::common::check_uncallable equivs-build; then
             dd::common::elevate_cmd apt-get update
-            dd::common::elevate_cmd apt-get install -y dpkg-dev
+            dd::common::elevate_cmd DEBIAN_FRONTEND=noninteractive apt-get install -y -q dpkg-dev
         fi
 
         # Copy declarations into temp directory

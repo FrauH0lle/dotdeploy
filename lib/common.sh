@@ -294,7 +294,7 @@ dd::common::install_pkgs() {
             dd::common::elevate_cmd emerge --verbose --changed-use --deep "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
             ;;
         ubuntu)
-            dd::common::elevate_cmd apt-get install -q -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
+            dd::common::elevate_cmd DEBIAN_FRONTEND=noninteractive apt-get install -q -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
     esac
 }
 
