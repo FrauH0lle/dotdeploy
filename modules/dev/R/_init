@@ -5,6 +5,6 @@ case "$dd_distro" in
         packages=( dotdeploy/dev-R )
         ;;
     ubuntu)
-        packages=( dotdeploy-dev-R )
+        packages=( dotdeploy-dev-r )
         ;;
 esac

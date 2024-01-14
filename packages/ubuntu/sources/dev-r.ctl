@@ -6,7 +6,7 @@ Priority: optional
 Homepage: https://gitlab.com/DonHugo/dotfiles
 Standards-Version: 3.9.2
 
-Package: dotdeploy-dev-R
+Package: dotdeploy-dev-r
 # Version: <enter version here; defaults to 1.0>
 # Maintainer: Your Name <yourname@example.com>
 # Pre-Depends: <comma-separated list of packages>
