@@ -13,9 +13,7 @@ module_setup() {
     if [[ $dd_distro == "ubuntu" ]]; then
         dd::common::ensure_ppa ubuntuhandbook1/emacs
     fi
-}
 
-module_configure() {
     # Clone .emacs.d config
     dd::common::ensure_repo git@github.com:FrauH0lle/emacs.d.git ~/.emacs.d
 
