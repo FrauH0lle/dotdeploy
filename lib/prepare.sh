@@ -50,9 +50,11 @@ case "$dd_distro" in
     ubuntu)
         # Make sure equivs and dpkg-dev are installed
         if dd::common::check_uncallable equivs-build; then
+            dd::common::elevate_cmd apt-get update
             dd::common::elevate_cmd apt-get install -y equivs
         fi
         if dd::common::check_uncallable equivs-build; then
+            dd::common::elevate_cmd apt-get update
             dd::common::elevate_cmd apt-get install -y dpkg-dev
         fi
 
