@@ -92,18 +92,48 @@ dd::db::get_checksum() {
     if dd::db::check_source_file "$module" "$source" "$db_file"; then
         db_checksum=$(jq -r ".modules.\"${module}\".files[] | select(.source == \"${source}\").checksum" "${db_file}")
         echo "$db_checksum"
+    else
+        return 1
     fi
 }
 
-# Retrieve deployed source files
+# Retrieve deployed files
 # Arguments:
 #   $1 - Database file
 #   $2 - Module
 # Outputs:
-#   Checksum string.
+#   Array of strings of the form SOURCE|DESTINATION
 dd::db::get_files() {
     local files
     mapfile -t -d "\n" files < <(jq -r ".modules.\"${2}\" // empty | .files[] | .source + \"|\" + .target" "${1}")
+    if [[ ${#files[@]} -gt 0 ]]; then
+        echo -n "${files[@]}"
+    fi
+}
+
+# Retrieve deployed source files of type copy
+# Arguments:
+#   $1 - Database file
+#   $2 - Module
+# Outputs:
+#   Array of strings of the form SOURCE|DESTINATION
+dd::db::get_copied_files() {
+    local files
+    mapfile -t -d "\n" files < <(jq -r ".modules.\"${2}\" // empty | .files[] | select(.type == \"copy\") | .source + \"|\" + .target" "${1}")
+    if [[ ${#files[@]} -gt 0 ]]; then
+        echo -n "${files[@]}"
+    fi
+}
+
+# Retrieve deployed source files of type link
+# Arguments:
+#   $1 - Database file
+#   $2 - Module
+# Outputs:
+#   Array of strings of the form SOURCE|DESTINATION
+dd::db::get_linked_files() {
+    local files
+    mapfile -t -d "\n" files < <(jq -r ".modules.\"${2}\" // empty | .files[] | select(.type == \"link\") | .source + \"|\" + .target" "${1}")
     if [[ ${#files[@]} -gt 0 ]]; then
         echo -n "${files[@]}"
     fi

@@ -295,6 +295,7 @@ dd::common::install_pkgs() {
             ;;
         ubuntu)
             dd::common::elevate_cmd DEBIAN_FRONTEND=noninteractive apt-get install -q -y "${DOTDEPLOY_REQ_PKGS[@]}" || exit 1
+            ;;
     esac
 }
 
