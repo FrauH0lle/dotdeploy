@@ -1,2 +1,4 @@
 dev-python/PyQt5 webchannel
 app-accessibility/speech-dispatcher python
+dev-python/pillow webp
+dev-python/PyQt6 quick
