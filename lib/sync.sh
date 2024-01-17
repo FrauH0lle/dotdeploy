@@ -75,7 +75,10 @@ dd::sync::collect() {
         done
       fi
     done
-    printf "%s\n" "${changed_files[@]}"
+
+    if [[ "${#changed_files[@]}" -gt 0 ]]; then
+      printf "%s\n" "${changed_files[@]}"
+    fi
 }
 
 # Check if deployed files are in sync with their sources
