@@ -64,7 +64,7 @@ dd::confgen::generate() {
   mapfile -t home_modules < <(dd::db::get_modules "$DOTDEPLOY_LOCAL_DB")
   mapfile -t sys_modules < <(dd::db::get_modules "$DOTDEPLOY_DB")
   local all_modules=( "${home_modules[@]}" "${sys_modules[@]}" )
-  mapfile -t -d " " all_modules < <(dd::common::arr_remove_duplicates "${all_modules[@]}")
+  mapfile -t all_modules < <(dd::common::arr_remove_duplicates "${all_modules[@]}")
 
   dd::log::log-info "Generating $output"
 

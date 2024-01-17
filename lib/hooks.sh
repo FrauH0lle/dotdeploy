@@ -47,8 +47,6 @@ dd::hooks::get_all_hooks() {
 
     local module
     for module in "${modules[@]}"; do
-        dd::log::log-info "Collect funcs for $module"
-        # FIXME
         if [[ "$module" == "hosts/"* ]]; then
             local module_init_file="$DOTDEPLOY_ROOT"/"$module/"_init
         else

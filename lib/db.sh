@@ -92,8 +92,6 @@ dd::db::get_checksum() {
     if dd::db::check_source_file "$module" "$source" "$db_file"; then
         db_checksum=$(jq -r ".modules.\"${module}\".files[] | select(.source == \"${source}\").checksum" "${db_file}")
         echo "$db_checksum"
-    else
-        return 1
     fi
 }
 
@@ -257,10 +255,16 @@ dd::db::write_meta_kv() {
 # Outputs:
 #   Active modules.
 dd::db::get_modules() {
+    local home_modules
+    local sys_modules
+    mapfile -t home_modules < <(jq -r '.modules | map_values(select(.deployed == true)) | keys[]' "$DOTDEPLOY_LOCAL_DB")
+    mapfile -t sys_modules < <(jq -r '.modules | map_values(select(.deployed == true)) | keys[]' "$DOTDEPLOY_DB")
+
     local modules
-    mapfile -t -d "\n" modules < <(jq -r '.modules | map_values(select(.deployed == true)) | keys[]' "${1}")
+    mapfile -t modules < <(dd::common::arr_remove_duplicates "${home_modules[@]}" "${sys_modules[@]}")
+
     if [[ ${#modules[@]} -gt 0 ]]; then
-        echo -n "${modules[@]}"
+        printf "%s\n" "${modules[@]}"
     fi
 }
 

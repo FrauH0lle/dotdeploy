@@ -255,7 +255,6 @@ dd::common::arr_remove_duplicates() {
     done
 
     # Return the unique array
-    # echo -n "${unique_arr[@]}"
     printf "%s\n" "${unique_arr[@]}"
 }
 
