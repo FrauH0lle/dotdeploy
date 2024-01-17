@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Short-circuit if deploy.sh has already been sourced
+[[ $(type -t dd::deploy::loaded) == function ]] && return 0
+
+
 # Expected system env variables:
 # HOME
 
@@ -25,7 +29,7 @@ source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/confgen.sh
 #   None
 # Outputs:
 #   Print usage with examples.
-dotdeploy_deploy_help() {
+dd::deploy::help() {
     cat <<EOF
 Deploy modules to system.
 
@@ -57,14 +61,14 @@ EOF
 #   $DOTDEPLOY_REQ_PKGS
 # Outputs:
 #   None. Will create symlinks and copy files
-dotdeploy_deploy() {
+dd::deploy::deploy() {
     local modules=()
     while (( $# > 0 )) ; do
         case $1 in
             help | --help | -h)
                 # Deactivate logging
                 dd::log::log_off
-                dotdeploy_deploy_help
+                dd::deploy::help
                 exit 0
                 ;;
             --host)
@@ -82,7 +86,7 @@ dotdeploy_deploy() {
             -*)
                 printf >&2 "Error: Unknown option %s\n" "$1"
                 dd::log::log_off
-                dotdeploy_deploy_help
+                dd::deploy::help
                 exit 1
                 ;;
             *)  # Default case: Store arguments in modules arrary
@@ -137,7 +141,7 @@ dotdeploy_deploy() {
     fi
 
     # Remove any duplicates in dotdeploy_modules
-    mapfile -t -d " " dotdeploy_modules < <(dd::common::arr_remove_duplicates "${dotdeploy_modules[@]}")
+    mapfile -t dotdeploy_modules < <(dd::common::arr_remove_duplicates "${dotdeploy_modules[@]}")
 
     # Function to recursively resolve dependencies
     # FIXME Move to better section
@@ -186,7 +190,6 @@ dotdeploy_deploy() {
     fi
 
     dotdeploy_modules=( "${resolved_deps[@]}" "${dotdeploy_modules[@]}" )
-    echo "all modules are now: ${dotdeploy_modules[*]}"
 
     # Verify that all deployed files are still valid
     local module
@@ -221,6 +224,7 @@ dotdeploy_deploy() {
     steps=( "pre" "main" "post" )
 
     # Verify that copied files are not changed
+    local changed_files=()
     local phase
     for phase in "${phases[@]}"; do
         local array_name
@@ -248,10 +252,8 @@ dotdeploy_deploy() {
                     if [[ $target_checksum == "not_found" ]]; then
                         dd::log::log-warn "$target was not found."
                     elif [[ $target_checksum != "$db_checksum" ]]; then
-                        dd::log::log-warn "$target has been changed!"
-                        dd::log::log-warn "Any changes will be overwritten!"
+                        changed_files+=( "$target" )
                     fi
-
                 fi
             done
         done
@@ -263,9 +265,21 @@ dotdeploy_deploy() {
     for module in "${dotdeploy_modules[@]}"; do
         printf "\r\t - %s\n" "$module"
     done
-    printf "\r\033[2K\033[1;33m%s\033[0m\n" "Press Ctrl+C to abort or Enter to continue immediately."
-
     seconds=10
+
+    if [[ "${#changed_files[@]}" -gt 0 ]]; then
+        printf "\r\033[2K\033[1;31m%s\033[0m\n" "WARNING! The following files have changed locally:"
+        local file
+        for file in "${changed_files[@]}"; do
+            printf "\r\t - %s\n" "$file"
+        done
+        printf "\r\033[2K\033[1;31m%s\033[0m\n" "Any changes will be overwritten!"
+        printf "\r\033[2K\033[1;37m%s\033[0m\n" "Run dotdeploy check to view the changes."
+        seconds=30
+    fi
+
+    printf "\r\033[2K\033[1;33m\n%s\033[0m\n" "Press Ctrl+C to abort or Enter to continue immediately."
+
     while [[ "$seconds" -gt 0 ]]; do
         # Print the countdown
         echo -n "$seconds... "
@@ -384,4 +398,10 @@ dotdeploy_deploy() {
 
     # Show message collected
     dd::log::display_messages
+}
+
+
+# Marker function to indicate deploy.sh has been fully sourced
+dd::deploy::loaded() {
+  return 0
 }

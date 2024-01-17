@@ -39,6 +39,7 @@ Usage:
 For more information on a specific command, you can use 'dotdeploy <command> help'.
 
 Choose one of the available commands:
+       check                Check if deployed files are in sync
        deploy               Deploy dotfiles
        help, -h, --help     Show this help message
 
@@ -72,6 +73,12 @@ while (( $# > 0 )) ; do
         --dry-run)
             dd_dryrun=1
             ;;
+        check)
+            # Check modules
+            dd_check=1
+            shift
+            break
+            ;;
         deploy)
             # Deploy modules
             dd_deploy=1
@@ -99,7 +106,7 @@ if [[ ! ${#unknown[@]} -eq 0 ]]; then
     echo "Error: Invalid command ${unknown[*]}"
     show_help
     exit 1
-elif [[ $dd_deploy -eq 1 ]]; then
+elif [[ $dd_deploy -eq 1 || $dd_check -eq 1 ]]; then
     # Libraries
     source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/common.sh
     source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/log.sh
@@ -119,6 +126,14 @@ elif [[ $dd_deploy -eq 1 ]]; then
     dd::log::log-info "TMP directory set to $DOTDEPLOY_TMP_DIR"
 
     # Start deployment
-    source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/deploy.sh
-    dotdeploy_deploy "$@"
+    if [[ $dd_deploy -eq 1 ]]; then
+        source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/deploy.sh
+        dd::deploy::deploy "$@"
+    fi
+
+    # Check files
+    if [[ $dd_check -eq 1 ]]; then
+        source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/sync.sh
+        dd::sync::check "$@"
+    fi
 fi
