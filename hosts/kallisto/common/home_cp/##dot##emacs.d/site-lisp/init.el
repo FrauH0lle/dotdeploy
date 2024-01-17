@@ -4,7 +4,7 @@
 
  :completion
  vertico
- company
+ corfu
 
  :ui
  doom-dashboard
@@ -53,7 +53,7 @@
 
  :lang
  ;; ;; common-lisp
- ;; ;; data
+ data
  emacs-lisp
  (ess +lsp)
  ;; (latex
@@ -62,6 +62,7 @@
  markdown
  ;; (scheme
  ;;  +racket)
+ (sh +lsp +tree-sitter)
 
  :config
  (default +bindings +smartparens)
