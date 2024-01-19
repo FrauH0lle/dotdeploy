@@ -59,6 +59,7 @@ fi
 
 dd_dryrun=0
 dd_deploy=0
+dd_check=0
 
 # Parse arguments
 unknown=()
@@ -129,6 +130,7 @@ elif [[ $dd_deploy -eq 1 || $dd_check -eq 1 ]]; then
     if [[ $dd_deploy -eq 1 ]]; then
         source "$(dirname "$(realpath "${BASH_SOURCE[0]}")")"/lib/deploy.sh
         dd::deploy::deploy "$@"
+        dd::log::log-ok "Finished module deployment."
     fi
 
     # Check files
