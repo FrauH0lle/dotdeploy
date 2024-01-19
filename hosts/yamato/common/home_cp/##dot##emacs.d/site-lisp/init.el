@@ -55,7 +55,7 @@
 
  :lang
  ;; ;; common-lisp
- ;; ;; data
+ data
  emacs-lisp
  (ess +lsp)
  ;; (latex
@@ -63,7 +63,7 @@
  ;;  +latexmk)
  markdown
  (python)
- (sh +lsp)
+ (sh +lsp +tree-sitter)
  ;; (scheme
  ;;  +racket)
 
