@@ -11,6 +11,7 @@ IUSE=""
 # Necessities
 RDEPEND="
 	dev-vcs/git
+    app-misc/jq
 "
 
 # LTS Kernel
