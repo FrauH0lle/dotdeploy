@@ -15,4 +15,6 @@ RDEPEND="
 	app-admin/keepassxc
 	gui-apps/input-remapper
 	sys-boot/sdboot-up
+	sys-kernel/modprobed-db
+	media-sound/strawberry
 "
