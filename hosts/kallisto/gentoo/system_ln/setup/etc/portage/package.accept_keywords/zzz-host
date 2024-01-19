@@ -4,3 +4,5 @@ virtual/dist-kernel
 
 # TLP
 sys-power/tlp
+
+sys-kernel/modprobed-db

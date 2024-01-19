@@ -15,7 +15,8 @@ RDEPEND="
 	app-admin/keepassxc
 	gui-apps/input-remapper
 	sys-boot/sdboot-up
-    media-sound/easyeffects
-    sys-power/tlp
-    sys-apps/ethtool
+	media-sound/easyeffects
+	sys-power/tlp
+	sys-apps/ethtool
+	sys-kernel/modprobed-db
 "
