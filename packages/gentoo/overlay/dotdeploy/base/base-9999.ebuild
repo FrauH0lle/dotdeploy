@@ -11,11 +11,12 @@ IUSE=""
 # Necessities
 RDEPEND="
 	dev-vcs/git
-    app-misc/jq
+	app-misc/jq
 "
 
 # LTS Kernel
 RDEPEND="
+	${RDEPEND}
 	=sys-kernel/gentoo-kernel-bin-6.1*
 "
 
@@ -56,4 +57,6 @@ RDEPEND="
 	${RDEPEND}
 	sys-process/htop
 	app-editors/nano
+	sys-power/cpupower
+	media-fonts/terminus-font
 "
