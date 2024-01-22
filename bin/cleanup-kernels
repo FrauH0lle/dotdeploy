@@ -32,13 +32,35 @@ done
 # Remove files
 if [[ "${#unique_arr[@]}" -gt 0 ]]; then
   # Return the unique array
-  echo "These files can be removed:"
+  echo "These files will be removed:"
   printf "%s\n" "${unique_arr[@]}"
+  printf "\n"
 
-  for kfile in "${unique_arr[@]}"; do
-    kfile="$(echo "$kfile" | cut -d ' ' -f 3)"
-    sudo rm --interactive --verbose "$kfile"
+  while true; do
+    echo "Proceed?"
+    echo "[y]es"
+    echo "[n]o"
+
+    read -rp "Select an option: " choice
+
+    case "$choice" in
+      y)
+        for kfile in "${unique_arr[@]}"; do
+          kfile="$(echo "$kfile" | cut -d ' ' -f 3)"
+          sudo rm --verbose "$kfile"
+        done
+        break
+        ;;
+      n)
+        echo "Aborting."
+        break
+        ;;
+      *)
+        echo "Wrong option. Please choose 'y' or 'n'."
+        ;;
+    esac
   done
+
 else
   echo "No old kernel files found."
 fi
