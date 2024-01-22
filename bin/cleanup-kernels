@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Terminate if command returns non-zero exit status
+set -o errexit
+# Terminate if variable is used which has not been initialized
+set -o nounset
+
+mapfile -t kfiles_boot_efi < <(find /boot/efi/ -maxdepth 1 -type f -exec sha256sum {} +)
+mapfile -t kfiles_boot < <(find /boot/ -maxdepth 1 -type f -exec sha256sum {} +)
+
+# Associative array to track seen elements
+declare -A seen
+for elem in "${kfiles_boot_efi[@]}"; do
+  IFS=' ' read -r checksum file <<< "$elem"
+  seen[$checksum]=1
+done
+
+# Array to hold unique elements
+unique_arr=()
+
+for elem in "${kfiles_boot[@]}"; do
+  IFS=' ' read -r checksum file <<< "$elem"
+  # Because of 'nounset', we need to write it like below
+  if [[ -z ${seen[$checksum]+"${seen[$checksum]}"} ]]; then
+    # Add element if not seen before
+    unique_arr+=( "$elem" )
+    # Mark element as seen
+    seen[$checksum]=1
+  fi
+done
+
+# Remove files
+if [[ "${#unique_arr[@]}" -gt 0 ]]; then
+  # Return the unique array
+  echo "These files can be removed:"
+  printf "%s\n" "${unique_arr[@]}"
+
+  for kfile in "${unique_arr[@]}"; do
+    kfile="$(echo "$kfile" | cut -d ' ' -f 3)"
+    sudo rm --interactive --verbose "$kfile"
+  done
+else
+  echo "No old kernel files found."
+fi
