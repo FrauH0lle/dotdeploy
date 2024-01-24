@@ -2,6 +2,10 @@
 ## systemd-boot
 sys-apps/systemd boot kernel-install cryptsetup
 
+# We use the traditional /boot layout here
+sys-kernel/installkernel -systemd
+
+
 #
 ## Grahics card
 # Drivers
