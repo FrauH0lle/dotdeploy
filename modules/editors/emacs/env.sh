@@ -1,1 +1,1 @@
-prepend_path "$HOME"/.emacs.d/bin
+pathmunge "$HOME"/.emacs.d/bin
