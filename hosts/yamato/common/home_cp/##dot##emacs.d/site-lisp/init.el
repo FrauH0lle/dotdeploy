@@ -63,6 +63,7 @@
  ;;  +latexmk)
  markdown
  (python)
+ (rust +lsp +tree-sitter)
  (sh +lsp +tree-sitter)
  ;; (scheme
  ;;  +racket)

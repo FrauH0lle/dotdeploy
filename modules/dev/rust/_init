@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+case "$dd_distro" in
+    gentoo)
+        packages=( dotdeploy/dev-rust )
+        ;;
+esac

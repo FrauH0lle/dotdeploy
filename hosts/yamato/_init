@@ -13,6 +13,7 @@ depends=(
    editors/emacs
    hardware/hp-printer
    dev/R
+   dev/rust
    dev/containers
    services/samba
    vm/virtualbox
