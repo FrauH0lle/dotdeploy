@@ -3,7 +3,7 @@
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{9..11} )
+PYTHON_COMPAT=( python3_{9..12} )
 DISTUTILS_SINGLE_IMPL=1
 DISTUTILS_USE_SETUPTOOLS="rdepend"
 
@@ -24,7 +24,7 @@ RDEPEND="x11-libs/gtk+:3
 		   dev-python/pygobject[${PYTHON_USEDEP}]
 		   dev-python/pydbus[${PYTHON_USEDEP}]
 		   dev-python/pydantic[${PYTHON_USEDEP}]
-		   dev-python/python-evdev[${PYTHON_USEDEP}]
+		   dev-python/evdev[${PYTHON_USEDEP}]
 		   dev-python/setuptools[${PYTHON_USEDEP}]
 		 ')"
 

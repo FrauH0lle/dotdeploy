@@ -1,0 +1,398 @@
+From 6ef64be8645ac32fc0b42df2cee5d9ff3b57e485 Mon Sep 17 00:00:00 2001
+From: Rahul Rameshbabu <sergeantsagara@protonmail.com>
+Date: Sun, 15 Jan 2023 12:33:46 -0800
+Subject: [PATCH 1/2] Add support for SAML based authentication when using
+ OpenConnect VPN
+
+This change utilizes QtWebEngine to provide an integrated browser whose data can
+be forwarded to libopenconnect for handling the SAML authentication process.
+This change also refactors the external browser SAML protocol flow to follow
+conventions of the openconnect implementation in plasma-nm.
+
+BUG: 448153
+Signed-off-by: Rahul Rameshbabu <sergeantsagara@protonmail.com>
+---
+ CMakeLists.txt                                |  2 +
+ vpn/openconnect/CMakeLists.txt                |  2 +
+ vpn/openconnect/openconnectauth.cpp           | 93 +++++++++++++++++++
+ vpn/openconnect/openconnectauth.h             |  6 ++
+ .../openconnectauthworkerthread.cpp           | 46 ++++++---
+ vpn/openconnect/openconnectauthworkerthread.h |  5 +-
+ 6 files changed, 137 insertions(+), 17 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8bd14b017..97374d8f6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -34,6 +34,8 @@ find_package(Qt${QT_MAJOR_VERSION} ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
+     Network
+     Quick
+     QuickWidgets
++    WebEngineCore
++    WebEngineWidgets
+     Widgets
+ )
+ 
+diff --git a/vpn/openconnect/CMakeLists.txt b/vpn/openconnect/CMakeLists.txt
+index 8cb10ba54..1f5788273 100644
+--- a/vpn/openconnect/CMakeLists.txt
++++ b/vpn/openconnect/CMakeLists.txt
+@@ -28,6 +28,8 @@ macro(add_openconnect_plugin name)
+         KF5::I18n
+         KF5::KIOWidgets
+         KF5::WidgetsAddons
++        Qt::WebEngineCore
++        Qt::WebEngineWidgets
+         Qt::Xml
+         PkgConfig::OPENCONNECT
+     )
+diff --git a/vpn/openconnect/openconnectauth.cpp b/vpn/openconnect/openconnectauth.cpp
+index 550570862..4b6bd7d27 100644
+--- a/vpn/openconnect/openconnectauth.cpp
++++ b/vpn/openconnect/openconnectauth.cpp
+@@ -12,6 +12,8 @@
+ #include "passwordfield.h"
+ #include "plasma_nm_openconnect.h"
+ 
++#include <QAtomicPointer>
++#include <QByteArray>
+ #include <QComboBox>
+ #include <QCryptographicHash>
+ #include <QDialog>
+@@ -27,6 +29,9 @@
+ #include <QPushButton>
+ #include <QTimer>
+ #include <QWaitCondition>
++#include <QWebEngineCookieStore>
++#include <QWebEngineProfile>
++#include <QWebEngineView>
+ 
+ #include <KLocalizedString>
+ 
+@@ -84,6 +89,7 @@ public:
+     int passwordFormIndex;
+     QByteArray tokenMode;
+     Token token;
++    QAtomicPointer<QSemaphore> waitForWebEngineFinish;
+ 
+     enum LogLevels { Error = 0, Info, Debug, Trace };
+ };
+@@ -122,6 +128,7 @@ OpenconnectAuthWidget::OpenconnectAuthWidget(const NetworkManager::VpnSetting::P
+             QOverload<const QString &, const QString &, const QString &, bool *>::of(&OpenconnectAuthWorkerThread::validatePeerCert),
+             this,
+             &OpenconnectAuthWidget::validatePeerCert);
++    connect(d->worker, &OpenconnectAuthWorkerThread::openWebEngine, this, &OpenconnectAuthWidget::openWebEngine);
+     connect(d->worker, &OpenconnectAuthWorkerThread::processAuthForm, this, &OpenconnectAuthWidget::processAuthForm);
+     connect(d->worker, &OpenconnectAuthWorkerThread::updateLog, this, &OpenconnectAuthWidget::updateLog);
+     connect(d->worker, QOverload<const QString &>::of(&OpenconnectAuthWorkerThread::writeNewConfig), this, &OpenconnectAuthWidget::writeNewConfig);
+@@ -144,6 +151,11 @@ OpenconnectAuthWidget::OpenconnectAuthWidget(const NetworkManager::VpnSetting::P
+ OpenconnectAuthWidget::~OpenconnectAuthWidget()
+ {
+     Q_D(OpenconnectAuthWidget);
++    QSemaphore *webEngineCancel =
++        d->waitForWebEngineFinish.fetchAndStoreRelaxed(nullptr);
++    if (webEngineCancel) {
++        webEngineCancel->release();
++    }
+     d->userQuit = true;
+     if (write(d->cancelPipes[1], "x", 1)) {
+         // not a lot we can do
+@@ -480,6 +492,87 @@ void OpenconnectAuthWidget::logLevelChanged(int newLevel)
+     }
+ }
+ 
++
++void OpenconnectAuthWidget::handleWebEngineCookie(const QNetworkCookie &cookie)
++{
++    Q_D(OpenconnectAuthWidget);
++    const char *cookiesArr[3] = {nullptr};
++
++    cookiesArr[0] = cookie.name().constData();
++    cookiesArr[1] = cookie.value().constData();
++
++#if OPENCONNECT_CHECK_VER(5, 7)
++    struct oc_webview_result res;
++    res.cookies = cookiesArr;
++    if (!openconnect_webview_load_changed(d->vpninfo, &res)) {
++        QSemaphore *waitForWebEngineFinish =
++            d->waitForWebEngineFinish.fetchAndStoreRelaxed(nullptr);
++        if (waitForWebEngineFinish) {
++            waitForWebEngineFinish->release();
++        }
++    }
++#endif
++}
++
++void OpenconnectAuthWidget::handleWebEngineUrl(const QUrl &url)
++{
++    Q_D(OpenconnectAuthWidget);
++    // Hack due to lack of NULL pointer check in AnyConnect sso_detect_done
++    // logic in libopenconnect.
++    const char *cookiesArr[1] = {nullptr};
++    QByteArray urlByteArray = url.toString().toLocal8Bit();
++
++#if OPENCONNECT_CHECK_VER(5, 7)
++    struct oc_webview_result res;
++    res.cookies = cookiesArr;
++    res.uri = urlByteArray.constData();
++    if (!openconnect_webview_load_changed(d->vpninfo, &res)) {
++        QSemaphore *waitForWebEngineFinish =
++            d->waitForWebEngineFinish.fetchAndStoreRelaxed(nullptr);
++        if (waitForWebEngineFinish) {
++            waitForWebEngineFinish->release();
++        }
++    }
++#endif
++}
++
++void OpenconnectAuthWidget::openWebEngine(const char *loginUri, QSemaphore *waitForWebEngineFinish)
++{
++    Q_D(OpenconnectAuthWidget);
++    d->waitForWebEngineFinish.storeRelease(waitForWebEngineFinish);
++    auto webEngineView = new QWebEngineView(this);
++    QWebEngineCookieStore *cookieStore = webEngineView->page()->profile()->cookieStore();
++
++    // Some VPN protocols depend on parsing HTTP response headers to complete
++    // authentication. However, QtWebEngine does not provide an interface for
++    // capturing HTTP response data. QtWebEngine currently offers the capability
++    // to intercept HTTP requests made by the browser instance using
++    // QWebEngineUrlRequestInterceptor, but there is no equivalent for HTTP
++    // response data.
++    //
++    // VPN protocols with SSO support that do not depend on HTTP response headers
++    //
++    //     - Cisco AnyConnect Protocol
++    //
++    // VPN protocols with SSO support that do depend on HTTP response headers
++    //
++    //     - Palo Alto Networks GlobalProtect Protocol
++    //
++    // FIXME Add HTTP response header handling when the QtWebEngine ecosystem
++    // adds support for HTTP response intercepting.
++    connect(webEngineView, &QWebEngineView::urlChanged, this, &OpenconnectAuthWidget::handleWebEngineUrl);
++    connect(cookieStore, &QWebEngineCookieStore::cookieAdded, this, &OpenconnectAuthWidget::handleWebEngineCookie);
++    cookieStore->loadAllCookies();
++
++    webEngineView->load(QUrl(loginUri, QUrl::TolerantMode));
++    // QWebEngineView sizeHint fails to size window correctly based on contents
++    // when QLayout::setSizeConstraint(QLayout::SetFixedSize) is set. Using same
++    // size as webkitgtk is set to in GNOME/NetworkManager-openconnect.
++    webEngineView->setFixedSize(640, 480);
++
++    d->ui.loginBoxLayout->addWidget(webEngineView);
++}
++
+ void OpenconnectAuthWidget::addFormInfo(const QString &iconName, const QString &message)
+ {
+     Q_D(OpenconnectAuthWidget);
+diff --git a/vpn/openconnect/openconnectauth.h b/vpn/openconnect/openconnectauth.h
+index 7dfcd0a21..682cb311f 100644
+--- a/vpn/openconnect/openconnectauth.h
++++ b/vpn/openconnect/openconnectauth.h
+@@ -12,7 +12,10 @@
+ 
+ #include <NetworkManagerQt/VpnSetting>
+ 
++#include <QNetworkCookie>
++#include <QSemaphore>
+ #include <QString>
++#include <QUrl>
+ 
+ class QLayout;
+ struct openconnect_info;
+@@ -49,6 +52,9 @@ private Q_SLOTS:
+     void viewServerLogToggled(bool);
+     void connectHost();
+     void initTokens();
++    void handleWebEngineCookie(const QNetworkCookie &);
++    void handleWebEngineUrl(const QUrl &url);
++    void openWebEngine(const char *, QSemaphore *);
+ };
+ 
+ #endif // OPENCONNECTAUTH_H
+diff --git a/vpn/openconnect/openconnectauthworkerthread.cpp b/vpn/openconnect/openconnectauthworkerthread.cpp
+index 6ae27567c..110d8792f 100644
+--- a/vpn/openconnect/openconnectauthworkerthread.cpp
++++ b/vpn/openconnect/openconnectauthworkerthread.cpp
+@@ -7,14 +7,12 @@
+ #include "openconnectauthworkerthread.h"
+ 
+ #include <QByteArray>
++#include <QDesktopServices>
+ #include <QMutex>
++#include <QSemaphore>
+ #include <QString>
+-#include <QWaitCondition>
+-
+-#if OPENCONNECT_CHECK_VER(5, 8)
+ #include <QUrl>
+-#include <QDesktopServices>
+-#endif
++#include <QWaitCondition>
+ 
+ extern "C" {
+ #include <cerrno>
+@@ -26,14 +24,20 @@ extern "C" {
+ class OpenconnectAuthStaticWrapper
+ {
+ public:
+-#if OPENCONNECT_CHECK_VER(5, 8)
+-    static int openUri(struct openconnect_info *vpninfo, const char *login_uri, void *obj)
++    static int openWebEngine(struct openconnect_info *vpninfo, const char *loginUri, void *obj)
+     {
+-        if (obj)
+-            return static_cast<OpenconnectAuthWorkerThread *>(obj)->openUri(vpninfo, login_uri, obj);
++        if (obj) {
++            return static_cast<OpenconnectAuthWorkerThread *>(obj)->openWebEngineP(vpninfo, loginUri, obj);
++        }
++        return -1;
++    }
++    static int openUri(struct openconnect_info *vpninfo, const char *loginUri, void *obj)
++    {
++        if (obj) {
++            return static_cast<OpenconnectAuthWorkerThread *>(obj)->openUri(vpninfo, loginUri, obj);
++        }
+         return -1;
+     }
+-#endif
+ #if OPENCONNECT_CHECK_VER(5, 0)
+     static int writeNewConfig(void *obj, const char *str, int num)
+     {
+@@ -96,6 +100,9 @@ OpenconnectAuthWorkerThread::OpenconnectAuthWorkerThread(QMutex *mutex,
+                                                 OpenconnectAuthStaticWrapper::writeProgress,
+                                                 this);
+     openconnect_set_cancel_fd(m_openconnectInfo, cancelFd);
++#if OPENCONNECT_CHECK_VER(5, 7)
++    openconnect_set_webview_callback(m_openconnectInfo, OpenconnectAuthStaticWrapper::openWebEngine);
++#endif
+ #if OPENCONNECT_CHECK_VER(5, 8)
+     openconnect_set_external_browser_callback(m_openconnectInfo, OpenconnectAuthStaticWrapper::openUri);
+ #endif
+@@ -203,16 +210,25 @@ void OpenconnectAuthWorkerThread::writeProgress(int level, const char *fmt, va_l
+     Q_EMIT updateLog(msg, level);
+ }
+ 
+-#if OPENCONNECT_CHECK_VER(5, 8)
++int OpenconnectAuthWorkerThread::openWebEngineP(__attribute__((unused)) struct openconnect_info *vpninfo,
++                                                const char *loginUri, __attribute__((unused)) void *privdata)
++{
++    QSemaphore waitForWebEngineFinish;
++
++    Q_EMIT openWebEngine(loginUri, &waitForWebEngineFinish);
++    waitForWebEngineFinish.acquire();
++
++    return 0;
++}
++
+ int OpenconnectAuthWorkerThread::openUri(__attribute__((unused)) struct openconnect_info *vpninfo,
+-                                         const char *login_uri, __attribute__((unused)) void *privdata)
++                                         const char *loginUri, __attribute__((unused)) void *privdata)
+ {
+-    bool opened = QDesktopServices::openUrl(QUrl(login_uri, QUrl::TolerantMode));
++    bool opened = QDesktopServices::openUrl(QUrl(loginUri, QUrl::TolerantMode));
+     if (!opened) {
+         OpenconnectAuthStaticWrapper::writeProgress(this, PRG_ERR, "Failed to invoke QDesktopServices::openUrl.");
+-        return 1;
++        return -1;
+     }
+ 
+     return 0;
+ }
+-#endif
+diff --git a/vpn/openconnect/openconnectauthworkerthread.h b/vpn/openconnect/openconnectauthworkerthread.h
+index 1ec70f975..375da1eac 100644
+--- a/vpn/openconnect/openconnectauthworkerthread.h
++++ b/vpn/openconnect/openconnectauthworkerthread.h
+@@ -46,6 +46,7 @@ extern "C" {
+ #include <QThread>
+ 
+ class QMutex;
++class QSemaphore;
+ class QWaitCondition;
+ struct openconnect_info;
+ 
+@@ -66,6 +67,7 @@ Q_SIGNALS:
+     void writeNewConfig(const QString &);
+     void cookieObtained(const int &);
+     void initTokens();
++    void openWebEngine(const char *, QSemaphore *);
+ 
+ protected:
+     void run() override;
+@@ -75,9 +77,8 @@ private:
+     int validatePeerCert(void *, const char *);
+     int processAuthFormP(struct oc_auth_form *);
+     void writeProgress(int level, const char *, va_list);
+-#if OPENCONNECT_CHECK_VER(5, 8)
++    int openWebEngineP(struct openconnect_info *, const char *, void *);
+     int openUri(struct openconnect_info *, const char *, void *);
+-#endif
+ 
+     QMutex *m_mutex;
+     QWaitCondition *m_waitForUserInput;
+-- 
+GitLab
+
+
+From c1fff723f2e1ee117a10809562c9142103910a70 Mon Sep 17 00:00:00 2001
+From: Rahul Rameshbabu <sergeantsagara@protonmail.com>
+Date: Thu, 19 Jan 2023 17:26:05 -0800
+Subject: [PATCH 2/2] Clean up braceless single line conditionals in
+ openconnectauthworkerthread.cpp
+
+Signed-off-by: Rahul Rameshbabu <sergeantsagara@protonmail.com>
+---
+ vpn/openconnect/openconnectauthworkerthread.cpp | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/vpn/openconnect/openconnectauthworkerthread.cpp b/vpn/openconnect/openconnectauthworkerthread.cpp
+index 110d8792f..e0793aa89 100644
+--- a/vpn/openconnect/openconnectauthworkerthread.cpp
++++ b/vpn/openconnect/openconnectauthworkerthread.cpp
+@@ -41,34 +41,39 @@ public:
+ #if OPENCONNECT_CHECK_VER(5, 0)
+     static int writeNewConfig(void *obj, const char *str, int num)
+     {
+-        if (obj)
++        if (obj) {
+             return static_cast<OpenconnectAuthWorkerThread *>(obj)->writeNewConfig(str, num);
++        }
+         return -1;
+     }
+     static int validatePeerCert(void *obj, const char *str)
+     {
+-        if (obj)
++        if (obj) {
+             return static_cast<OpenconnectAuthWorkerThread *>(obj)->validatePeerCert(nullptr, str);
++        }
+         return -1;
+     }
+ #else
+     static int writeNewConfig(void *obj, char *str, int num)
+     {
+-        if (obj)
++        if (obj) {
+             return static_cast<OpenconnectAuthWorkerThread *>(obj)->writeNewConfig(str, num);
++        }
+         return -1;
+     }
+     static int validatePeerCert(void *obj, OPENCONNECT_X509 *cert, const char *str)
+     {
+-        if (obj)
++        if (obj) {
+             return static_cast<OpenconnectAuthWorkerThread *>(obj)->validatePeerCert(cert, str);
++        }
+         return -1;
+     }
+ #endif
+     static int processAuthForm(void *obj, struct oc_auth_form *form)
+     {
+-        if (obj)
++        if (obj) {
+             return static_cast<OpenconnectAuthWorkerThread *>(obj)->processAuthFormP(form);
++        }
+         return OC_FORM_RESULT_ERR;
+     }
+     static void writeProgress(void *obj, int level, const char *str, ...)
+-- 
+GitLab

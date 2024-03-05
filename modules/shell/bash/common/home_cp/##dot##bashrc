@@ -66,6 +66,7 @@ IS_ZSH="false"
 
 # Environment
 [[ -f $HOME/.env.sh ]] && source "$HOME/.env.sh"
+export PATH
 
 # fzf
 [[ -f $HOME/.fzf.sh ]] && source "$HOME/.fzf.sh"
