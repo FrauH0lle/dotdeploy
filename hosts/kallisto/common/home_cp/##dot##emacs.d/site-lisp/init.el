@@ -62,6 +62,7 @@
  markdown
  ;; (scheme
  ;;  +racket)
+ (rust +lsp +tree-sitter)
  (sh +lsp +tree-sitter)
 
  :config
