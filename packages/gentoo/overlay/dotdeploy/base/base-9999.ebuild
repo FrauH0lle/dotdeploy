@@ -52,6 +52,12 @@ RDEPEND="
 	app-portage/genlop
 "
 
+# mold linker
+RDEPEND="
+	${RDEPEND}
+    sys-devel/mold
+"
+
 # System tools
 RDEPEND="
 	${RDEPEND}
